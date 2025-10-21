@@ -25,12 +25,14 @@ func TestBuildCrud(t *testing.T) {
 		{
 			name: "simple",
 			params: grpc.CrudParams{
-				Message:        proto.NewMessage("Unit"),
+				Message:        proto.NewMessage("Unit").SetPackageName("unit.api"),
 				MessagesTarget: proto.NewFile("unit"),
 				ServiceTarget:  proto.NewService("UnitService"),
 			},
 			expectedService: `service UnitService {
   rpc GetUnitFoo (GetUnitRequest) returns (GetUnitResponse) {
+    option (google.api.http) = {
+    };
   }
   rpc ListUnit (ListUnitRequest) returns (ListUnitResponse) {
   }
@@ -49,40 +51,45 @@ func TestBuildCrud(t *testing.T) {
 
 package unit;
 
-message GetUnitRequest {
-}
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
 
-message GetUnitResponse {
+message GetUnitRequest {
+  string name = 1;
+  repeated string fields = 2;
 }
 
 message ListUnitRequest {
+  string parent = 1;
+  repeated string fields = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  string selection = 5;
 }
 
 message ListUnitResponse {
+  repeated unit.api.Unit list = 1;
+  string next_page_token = 2;
 }
 
 message CreateUnitRequest {
-}
-
-message CreateUnitResponse {
+  string parent = 1;
+  unit.api.Unit unit = 2;
 }
 
 message UpdateUnitRequest {
-}
-
-message UpdateUnitResponse {
+  name parent = 1;
+  unit.api.Unit unit = 2;
 }
 
 message PatchUnitRequest {
-}
-
-message PatchUnitResponse {
+  name parent = 1;
+  unit.api.Unit unit = 2;
+  google.protobuf.FieldMask field_mask = 3;
 }
 
 message DeleteUnitRequest {
-}
-
-message DeleteUnitResponse {
+  name parent = 1;
 }
 
 `,

@@ -1,7 +1,9 @@
-github.com/activatedio/protogen v0.1.1-0.20251020231533-0e8ee09bb62d h1:R5FzUh91of+MVjZrSxksFH954rzbtxjh0CTCKKy7d6U=
-github.com/activatedio/protogen v0.1.1-0.20251020231533-0e8ee09bb62d/go.mod h1:Agwpqyp7KYJ+s+60iaRzMampMZG1ky4aJYC3UxCblTg=
+github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646 h1:0OmGhtwU7tph0fI5uYN1bkBMdfzJpj9xfRGs/+UnpV8=
+github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646/go.mod h1:Agwpqyp7KYJ+s+60iaRzMampMZG1ky4aJYC3UxCblTg=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSASxEI=
+github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=

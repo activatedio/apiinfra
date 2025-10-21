@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/activatedio/protogen/proto"
+	"github.com/activatedio/protogen/tfl"
+	"github.com/iancoleman/strcase"
 )
 
 // CrudParams contains the options to build the crud service
@@ -11,6 +13,8 @@ type CrudParams struct {
 	Message        proto.Message
 	MessagesTarget proto.File
 	ServiceTarget  proto.Service
+	// ParentPath is the api path to prefix in front of the paths for options
+	ParentPath string
 }
 
 // BuildCrud add the methods needed ot a service for a crud message
@@ -25,7 +29,9 @@ func BuildCrud(params CrudParams) {
 		proto.NewMethod(fmt.Sprintf("Get%sFoo", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Get%sRequest", name),
 			ResponseName: fmt.Sprintf("Get%sResponse", name),
-		}),
+		}).AddOptions(
+			proto.NewOption("google.api.http", proto.NewMessageValueConstant(tfl.NewMessageValue())),
+		),
 		proto.NewMethod(fmt.Sprintf("List%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("List%sRequest", name),
 			ResponseName: fmt.Sprintf("List%sResponse", name),
@@ -48,70 +54,138 @@ func BuildCrud(params CrudParams) {
 		}),
 	)
 
+	mFile.AddImports(
+		proto.NewImport("google/protobuf/field_mask.proto"),
+		proto.NewImport("google/protobuf/empty.proto"),
+	)
+
 	mFile.AddMessages(
-		NewGetRequestResponse(msg).Messages()...,
+		NewGetRequest(msg),
 	)
 	mFile.AddMessages(
 		NewListRequestResponse(msg).Messages()...,
 	)
 	mFile.AddMessages(
-		NewCreateRequestResponse(msg).Messages()...,
+		NewCreateRequest(msg),
 	)
 	mFile.AddMessages(
-		NewUpdateRequestResponse(msg).Messages()...,
+		NewUpdateRequest(msg),
 	)
 	mFile.AddMessages(
-		NewPatchRequestResponse(msg).Messages()...,
+		NewPatchRequest(msg),
 	)
 	mFile.AddMessages(
-		NewDeleteRequestResponse(msg).Messages()...,
+		NewDeleteRequest(msg),
 	)
 }
 
-// NewGetRequestResponse returns a RequestResponse with Request and Response messages derived from the provided proto message.
-func NewGetRequestResponse(msg proto.Message) RequestResponse {
-	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("Get%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("Get%sResponse", msg.GetName())),
-	}
+// NewGetRequest returns a RequestResponse with Request and Response messages derived from the provided proto message.
+func NewGetRequest(msg proto.Message) proto.Message {
+	return proto.NewMessage(fmt.Sprintf("Get%sRequest", msg.GetName())).AddFields(
+		proto.NewField("name", proto.FieldParams{
+			FieldType: "string",
+			Number:    1,
+		}),
+		proto.NewField("fields", proto.FieldParams{
+			FieldType: "string",
+			Repeated:  true,
+			Number:    2,
+		}),
+	)
 }
 
 // NewListRequestResponse creates a RequestResponse with a List request and response message derived from the given proto.Message.
 func NewListRequestResponse(msg proto.Message) RequestResponse {
 	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("List%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("List%sResponse", msg.GetName())),
+		Request: proto.NewMessage(fmt.Sprintf("List%sRequest", msg.GetName())).AddFields(
+			proto.NewField("parent", proto.FieldParams{
+				FieldType: "string",
+				Number:    1,
+			}),
+			proto.NewField("fields", proto.FieldParams{
+				FieldType: "string",
+				Repeated:  true,
+				Number:    2,
+			}),
+			proto.NewField("page_size", proto.FieldParams{
+				FieldType: "int32",
+				Number:    3,
+			}),
+			proto.NewField("page_token", proto.FieldParams{
+				FieldType: "string",
+				Number:    4,
+			}),
+			proto.NewField("selection", proto.FieldParams{
+				FieldType: "string",
+				Number:    5,
+			}),
+		),
+		Response: proto.NewMessage(fmt.Sprintf("List%sResponse", msg.GetName())).AddFields(
+			proto.NewField("list", proto.FieldParams{
+				FieldType: GetQualifiedName(msg),
+				Repeated:  true,
+				Number:    1,
+			}),
+			proto.NewField("next_page_token", proto.FieldParams{
+				FieldType: "string",
+				Number:    2,
+			}),
+		),
 	}
 }
 
-// NewCreateRequestResponse initializes a RequestResponse with formatted create request and response messages.
-func NewCreateRequestResponse(msg proto.Message) RequestResponse {
-	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("Create%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("Create%sResponse", msg.GetName())),
-	}
+// NewCreateRequest initializes a RequestResponse with formatted create request and response messages.
+func NewCreateRequest(msg proto.Message) proto.Message {
+	return proto.NewMessage(fmt.Sprintf("Create%sRequest", msg.GetName())).AddFields(
+		proto.NewField("parent", proto.FieldParams{
+			FieldType: "string",
+			Number:    1,
+		}),
+		proto.NewField(strcase.ToLowerCamel(msg.GetName()), proto.FieldParams{
+			FieldType: GetQualifiedName(msg),
+			Number:    2,
+		}),
+	)
 }
 
-// NewUpdateRequestResponse creates a new RequestResponse with an Update request and response based on the given message name.
-func NewUpdateRequestResponse(msg proto.Message) RequestResponse {
-	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("Update%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("Update%sResponse", msg.GetName())),
-	}
+// NewUpdateRequest creates a new RequestResponse with an Update request and response based on the given message name.
+func NewUpdateRequest(msg proto.Message) proto.Message {
+	return proto.NewMessage(fmt.Sprintf("Update%sRequest", msg.GetName())).AddFields(
+		proto.NewField("parent", proto.FieldParams{
+			FieldType: "name",
+			Number:    1,
+		}),
+		proto.NewField(strcase.ToLowerCamel(msg.GetName()), proto.FieldParams{
+			FieldType: GetQualifiedName(msg),
+			Number:    2,
+		}),
+	)
 }
 
-// NewPatchRequestResponse creates a RequestResponse with a "Patch" request and response message based on the given proto message.
-func NewPatchRequestResponse(msg proto.Message) RequestResponse {
-	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("Patch%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("Patch%sResponse", msg.GetName())),
-	}
+// NewPatchRequest creates a RequestResponse with a "Patch" request and response message based on the given proto message.
+func NewPatchRequest(msg proto.Message) proto.Message {
+	return proto.NewMessage(fmt.Sprintf("Patch%sRequest", msg.GetName())).AddFields(
+		proto.NewField("parent", proto.FieldParams{
+			FieldType: "name",
+			Number:    1,
+		}),
+		proto.NewField(strcase.ToLowerCamel(msg.GetName()), proto.FieldParams{
+			FieldType: GetQualifiedName(msg),
+			Number:    2,
+		}),
+		proto.NewField("field_mask", proto.FieldParams{
+			FieldType: "google.protobuf.FieldMask",
+			Number:    3,
+		}),
+	)
 }
 
-// NewDeleteRequestResponse creates a RequestResponse struct for delete operations based on the provided proto.Message.
-func NewDeleteRequestResponse(msg proto.Message) RequestResponse {
-	return RequestResponse{
-		Request:  proto.NewMessage(fmt.Sprintf("Delete%sRequest", msg.GetName())),
-		Response: proto.NewMessage(fmt.Sprintf("Delete%sResponse", msg.GetName())),
-	}
+// NewDeleteRequest creates a RequestResponse struct for delete operations based on the provided proto.Message.
+func NewDeleteRequest(msg proto.Message) proto.Message {
+	return proto.NewMessage(fmt.Sprintf("Delete%sRequest", msg.GetName())).AddFields(
+		proto.NewField("parent", proto.FieldParams{
+			FieldType: "name",
+			Number:    1,
+		}),
+	)
 }

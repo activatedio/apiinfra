@@ -3,7 +3,8 @@ module github.com/activatedio/apiinfra
 go 1.22.0
 
 require (
-	github.com/activatedio/protogen v0.1.1-0.20251020231533-0e8ee09bb62d
+	github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646
+	github.com/iancoleman/strcase v0.3.0
 	github.com/stretchr/testify v1.11.1
 )
 
