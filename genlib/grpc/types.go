@@ -8,6 +8,7 @@ type RequestResponse struct {
 	Response proto.Message
 }
 
+// Messages returns a slice containing the Request and Response proto messages from the RequestResponse struct.
 func (rr RequestResponse) Messages() []proto.Message {
 	return []proto.Message{rr.Request, rr.Response}
 }

@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"fmt"
+
 	"github.com/activatedio/protogen/proto"
 )
 
@@ -12,7 +13,7 @@ type CrudParams struct {
 	ServiceTarget  proto.Service
 }
 
-// BuildCrudV1 add the methods needed ot a service for a crud message
+// BuildCrud add the methods needed ot a service for a crud message
 func BuildCrud(params CrudParams) {
 
 	msg := params.Message

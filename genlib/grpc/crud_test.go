@@ -2,12 +2,13 @@ package grpc_test
 
 import (
 	"bytes"
+	"testing"
+
 	"github.com/activatedio/apiinfra/genlib/grpc"
 	"github.com/activatedio/protogen"
 	"github.com/activatedio/protogen/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestBuildCrud(t *testing.T) {
@@ -89,7 +90,7 @@ message DeleteUnitResponse {
 	}
 
 	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.name, func(_ *testing.T) {
 
 			grpc.BuildCrud(tt.params)
 
