@@ -1,5 +1,7 @@
 github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646 h1:0OmGhtwU7tph0fI5uYN1bkBMdfzJpj9xfRGs/+UnpV8=
 github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646/go.mod h1:Agwpqyp7KYJ+s+60iaRzMampMZG1ky4aJYC3UxCblTg=
+github.com/dave/jennifer v1.7.1 h1:B4jJJDHelWcDhlRQxWeo0Npa/pYKBLrirAQoTN45txo=
+github.com/dave/jennifer v1.7.1/go.mod h1:nXbxhEmQfOZhWml3D1cDK5M1FLnMSozpbFN/m3RmGZc=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/gertd/go-pluralize v0.2.1 h1:M3uASbVjMnTsPb0PNqg+E/24Vwigyo/tvyMTtAlLgiA=
