@@ -1,0 +1,156 @@
+syntax = "proto3";
+
+package example.api;
+
+import "types.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/activatedio/apiinfra/examples/app/pb";
+
+message GetProductRequest {
+  string name = 1;
+  repeated string fields = 2;
+}
+
+message ListProductRequest {
+  string parent = 1;
+  repeated string fields = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  string selection = 5;
+}
+
+message ListProductResponse {
+  repeated example.api.Product list = 1;
+  string next_page_token = 2;
+}
+
+message CreateProductRequest {
+  string parent = 1;
+  example.api.Product product = 2;
+}
+
+message UpdateProductRequest {
+  string name = 1;
+  example.api.Product product = 2;
+}
+
+message PatchProductRequest {
+  string name = 1;
+  example.api.Product product = 2;
+  google.protobuf.FieldMask field_mask = 3;
+}
+
+message DeleteProductRequest {
+  string name = 1;
+}
+
+message GetProductReviewRequest {
+  string name = 1;
+  repeated string fields = 2;
+}
+
+message ListProductReviewRequest {
+  string parent = 1;
+  repeated string fields = 2;
+  int32 page_size = 3;
+  string page_token = 4;
+  string selection = 5;
+}
+
+message ListProductReviewResponse {
+  repeated example.api.ProductReview list = 1;
+  string next_page_token = 2;
+}
+
+message CreateProductReviewRequest {
+  string parent = 1;
+  example.api.ProductReview product_review = 2;
+}
+
+message UpdateProductReviewRequest {
+  string name = 1;
+  example.api.ProductReview product_review = 2;
+}
+
+message PatchProductReviewRequest {
+  string name = 1;
+  example.api.ProductReview product_review = 2;
+  google.protobuf.FieldMask field_mask = 3;
+}
+
+message DeleteProductReviewRequest {
+  string name = 1;
+}
+
+service ExampleApiService {
+  rpc GetProduct (GetProductRequest) returns (example.api.Product) {
+    option (google.api.http) = {
+      get: "/v1/{name=products/*}"
+    };
+  }
+  rpc ListProduct (ListProductRequest) returns (ListProductResponse) {
+    option (google.api.http) = {
+      get: "/v1/products/*"
+    };
+  }
+  rpc CreateProduct (CreateProductRequest) returns (example.api.Product) {
+    option (google.api.http) = {
+      post: "/v1/products/*"
+      body: "*"
+    };
+  }
+  rpc UpdateProduct (UpdateProductRequest) returns (example.api.Product) {
+    option (google.api.http) = {
+      put: "/v1/{name=products/*}"
+      body: "*"
+    };
+  }
+  rpc PatchProduct (PatchProductRequest) returns (example.api.Product) {
+    option (google.api.http) = {
+      patch: "/v1/{name=products/*}"
+      body: "*"
+    };
+  }
+  rpc DeleteProduct (DeleteProductRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/{name=products/*}"
+    };
+  }
+  rpc GetProductReview (GetProductReviewRequest) returns (example.api.ProductReview) {
+    option (google.api.http) = {
+      get: "/v1/{name=products/*/product_reviews/*}"
+    };
+  }
+  rpc ListProductReview (ListProductReviewRequest) returns (ListProductReviewResponse) {
+    option (google.api.http) = {
+      get: "/v1/{parent=products/*}/product_reviews/*"
+    };
+  }
+  rpc CreateProductReview (CreateProductReviewRequest) returns (example.api.ProductReview) {
+    option (google.api.http) = {
+      post: "/v1/{parent=products/*}/product_reviews/*"
+      body: "*"
+    };
+  }
+  rpc UpdateProductReview (UpdateProductReviewRequest) returns (example.api.ProductReview) {
+    option (google.api.http) = {
+      put: "/v1/{name=products/*/product_reviews/*}"
+      body: "*"
+    };
+  }
+  rpc PatchProductReview (PatchProductReviewRequest) returns (example.api.ProductReview) {
+    option (google.api.http) = {
+      patch: "/v1/{name=products/*/product_reviews/*}"
+      body: "*"
+    };
+  }
+  rpc DeleteProductReview (DeleteProductReviewRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/{name=products/*/product_reviews/*}"
+    };
+  }
+}
+

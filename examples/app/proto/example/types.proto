@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package example.api;
+
+option go_package = "github.com/activatedio/apiinfra/examples/app/pb";
+
+message Product {
+}
+
+message ProductReview {
+}
+

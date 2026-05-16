@@ -14,16 +14,9 @@ var (
 	pl = pluralize.NewClient()
 )
 
-// CrudParams contains the options to build the crud service
-type CrudParams struct {
-	Message        proto.Message
-	MessagesTarget proto.File
-	ServiceTarget  proto.Service
-	// ParentPath is the api path to prefix in front of the paths for options
-	ParentPath string
-	// APIBasePath is the path to prepend to all http paths
-	APIBasePath string
-}
+const (
+	EmptyMessageName = "google.protobuf.Empty"
+)
 
 // GetAPIMessageName returns the name of the message in snake_case format derived from the Message.GetName() result.
 func (c CrudParams) GetAPIMessageName() string {
@@ -45,76 +38,149 @@ func (c CrudParams) GetNormalizedParentPath() string {
 	return strings.TrimSuffix(strings.TrimPrefix(c.ParentPath, "/"), "/")
 }
 
+func BuildCrudHeaders(params CrudParams) {
+	params.ServiceImportTarget.AddImports(proto.NewImport("google/api/annotations.proto"))
+}
+
 // BuildCrud add the methods needed ot a service for a crud message
 func BuildCrud(params CrudParams) {
 
-	msg := params.Message
-	name := msg.GetName()
-	svc := params.ServiceTarget
-	mFile := params.MessagesTarget
+	BuildCrudHeaders(params)
+	BuildGet(params)
+	BuildList(params)
+	BuildCreate(params)
+	BuildUpdate(params)
+	BuildPatch(params)
+	BuildDelete(params)
+}
 
-	svc.AddMethods(
+// BuildGet builds support for a get method
+func BuildGet(params CrudParams) {
+
+	name := params.Message.GetName()
+
+	params.ServiceTarget.AddMethods(
 		proto.NewMethod(fmt.Sprintf("Get%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Get%sRequest", name),
-			ResponseName: fmt.Sprintf("Get%sResponse", name),
+			ResponseName: GetQualifiedName(params.Message),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newGetOptions(params))),
 		),
+	)
+
+	params.MessagesTarget.AddMessages(
+		NewGetRequest(params),
+	)
+
+	params.MessagesTarget.AddImports(
+		proto.NewImport("google/protobuf/field_mask.proto"),
+	)
+}
+
+// BuildList creates objects for a list operation
+func BuildList(params CrudParams) {
+
+	name := params.Message.GetName()
+	params.ServiceTarget.AddMethods(
 		proto.NewMethod(fmt.Sprintf("List%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("List%sRequest", name),
 			ResponseName: fmt.Sprintf("List%sResponse", name),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newListOptions(params))),
 		),
+	)
+
+	params.MessagesTarget.AddMessages(
+		NewListRequestResponse(params).Messages()...,
+	)
+
+	params.MessagesTarget.AddImports(
+		proto.NewImport("google/protobuf/field_mask.proto"),
+	)
+}
+
+// BuildCreate builds operations for a create
+func BuildCreate(params CrudParams) {
+
+	name := params.Message.GetName()
+
+	params.ServiceTarget.AddMethods(
 		proto.NewMethod(fmt.Sprintf("Create%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Create%sRequest", name),
-			ResponseName: fmt.Sprintf("Create%sResponse", name),
+			ResponseName: GetQualifiedName(params.Message),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newCreateOptions(params))),
 		),
+	)
+
+	params.MessagesTarget.AddMessages(
+		NewCreateRequest(params),
+	)
+}
+
+// BuildUpdate builds operations for a create
+func BuildUpdate(params CrudParams) {
+
+	name := params.Message.GetName()
+
+	params.ServiceTarget.AddMethods(
 		proto.NewMethod(fmt.Sprintf("Update%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Update%sRequest", name),
-			ResponseName: fmt.Sprintf("Update%sResponse", name),
+			ResponseName: GetQualifiedName(params.Message),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newUpdateOptions(params))),
 		),
+	)
+
+	params.MessagesTarget.AddMessages(
+		NewUpdateRequest(params),
+	)
+}
+
+// BuildPatch builds operations for a create
+func BuildPatch(params CrudParams) {
+
+	name := params.Message.GetName()
+
+	params.ServiceTarget.AddMethods(
+
 		proto.NewMethod(fmt.Sprintf("Patch%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Patch%sRequest", name),
-			ResponseName: fmt.Sprintf("Patch%sResponse", name),
+			ResponseName: GetQualifiedName(params.Message),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newPatchOptions(params))),
 		),
+	)
+
+	params.MessagesTarget.AddMessages(
+		NewPatchRequest(params),
+	)
+
+	params.MessagesTarget.AddImports(
+		proto.NewImport("google/protobuf/field_mask.proto"),
+	)
+}
+
+// BuildDelete builds operations for a create
+func BuildDelete(params CrudParams) {
+
+	name := params.Message.GetName()
+
+	params.ServiceImportTarget.AddImports(proto.NewImport("google/protobuf/empty.proto"))
+
+	params.ServiceTarget.AddMethods(
 		proto.NewMethod(fmt.Sprintf("Delete%s", name), proto.MethodParams{
 			RequestName:  fmt.Sprintf("Delete%sRequest", name),
-			ResponseName: fmt.Sprintf("Delete%sResponse", name),
+			ResponseName: EmptyMessageName,
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(newDeleteOptions(params))),
 		),
 	)
 
-	mFile.AddImports(
-		proto.NewImport("google/protobuf/field_mask.proto"),
-		proto.NewImport("google/protobuf/empty.proto"),
-	)
-
-	mFile.AddMessages(
-		NewGetRequest(params),
-	)
-	mFile.AddMessages(
-		NewListRequestResponse(params).Messages()...,
-	)
-	mFile.AddMessages(
-		NewCreateRequest(params),
-	)
-	mFile.AddMessages(
-		NewUpdateRequest(params),
-	)
-	mFile.AddMessages(
-		NewPatchRequest(params),
-	)
-	mFile.AddMessages(
+	params.MessagesTarget.AddMessages(
 		NewDeleteRequest(params),
 	)
+
 }
 
 func newGetOptions(params CrudParams) tfl.MessageValue {
@@ -269,8 +335,8 @@ func NewCreateRequest(params CrudParams) proto.Message {
 // NewUpdateRequest creates a new RequestResponse with an Update request and response based on the given message name.
 func NewUpdateRequest(params CrudParams) proto.Message {
 	return proto.NewMessage(fmt.Sprintf("Update%sRequest", params.Message.GetName())).AddFields(
-		proto.NewField("parent", proto.FieldParams{
-			FieldType: "name",
+		proto.NewField("name", proto.FieldParams{
+			FieldType: "string",
 			Number:    1,
 		}),
 		proto.NewField(params.GetAPIMessageName(), proto.FieldParams{
@@ -283,8 +349,8 @@ func NewUpdateRequest(params CrudParams) proto.Message {
 // NewPatchRequest creates a RequestResponse with a "Patch" request and response message based on the given proto message.
 func NewPatchRequest(params CrudParams) proto.Message {
 	return proto.NewMessage(fmt.Sprintf("Patch%sRequest", params.Message.GetName())).AddFields(
-		proto.NewField("parent", proto.FieldParams{
-			FieldType: "name",
+		proto.NewField("name", proto.FieldParams{
+			FieldType: "string",
 			Number:    1,
 		}),
 		proto.NewField(params.GetAPIMessageName(), proto.FieldParams{
@@ -301,8 +367,8 @@ func NewPatchRequest(params CrudParams) proto.Message {
 // NewDeleteRequest creates a RequestResponse struct for delete operations based on the provided proto.Message.
 func NewDeleteRequest(params CrudParams) proto.Message {
 	return proto.NewMessage(fmt.Sprintf("Delete%sRequest", params.Message.GetName())).AddFields(
-		proto.NewField("parent", proto.FieldParams{
-			FieldType: "name",
+		proto.NewField("name", proto.FieldParams{
+			FieldType: "string",
 			Number:    1,
 		}),
 	)

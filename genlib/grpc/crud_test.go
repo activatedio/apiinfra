@@ -17,20 +17,22 @@ func TestBuildCrud(t *testing.T) {
 	r := require.New(t)
 
 	cases := []struct {
-		name             string
-		params           grpc.CrudParams
-		expectedService  string
-		expectedMessages string
+		name                  string
+		params                grpc.CrudParams
+		expectedService       string
+		expectedServiceImport string
+		expectedMessages      string
 	}{
 		{
 			name: "simple",
 			params: grpc.CrudParams{
-				Message:        proto.NewMessage("Unit").SetPackageName("unit.api"),
-				MessagesTarget: proto.NewFile("unit"),
-				ServiceTarget:  proto.NewService("UnitService"),
+				Message:             proto.NewMessage("Unit").SetPackageName("unit.api"),
+				MessagesTarget:      proto.NewFile("unit"),
+				ServiceImportTarget: proto.NewFile("services.proto"),
+				ServiceTarget:       proto.NewService("UnitService"),
 			},
 			expectedService: `service UnitService {
-  rpc GetUnit (GetUnitRequest) returns (GetUnitResponse) {
+  rpc GetUnit (GetUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       get: "/{name=units/*}"
     };
@@ -40,25 +42,25 @@ func TestBuildCrud(t *testing.T) {
       get: "/units/*"
     };
   }
-  rpc CreateUnit (CreateUnitRequest) returns (CreateUnitResponse) {
+  rpc CreateUnit (CreateUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       post: "/units/*"
       body: "*"
     };
   }
-  rpc UpdateUnit (UpdateUnitRequest) returns (UpdateUnitResponse) {
+  rpc UpdateUnit (UpdateUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       put: "/{name=units/*}"
       body: "*"
     };
   }
-  rpc PatchUnit (PatchUnitRequest) returns (PatchUnitResponse) {
+  rpc PatchUnit (PatchUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       patch: "/{name=units/*}"
       body: "*"
     };
   }
-  rpc DeleteUnit (DeleteUnitRequest) returns (DeleteUnitResponse) {
+  rpc DeleteUnit (DeleteUnitRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/{name=units/*}"
     };
@@ -66,12 +68,19 @@ func TestBuildCrud(t *testing.T) {
 }
 
 `,
+			expectedServiceImport: `syntax = "proto3";
+
+package services.proto;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+`,
 			expectedMessages: `syntax = "proto3";
 
 package unit;
 
 import "google/protobuf/field_mask.proto";
-import "google/protobuf/empty.proto";
 
 message GetUnitRequest {
   string name = 1;
@@ -97,18 +106,18 @@ message CreateUnitRequest {
 }
 
 message UpdateUnitRequest {
-  name parent = 1;
+  string name = 1;
   unit.api.Unit unit = 2;
 }
 
 message PatchUnitRequest {
-  name parent = 1;
+  string name = 1;
   unit.api.Unit unit = 2;
   google.protobuf.FieldMask field_mask = 3;
 }
 
 message DeleteUnitRequest {
-  name parent = 1;
+  string name = 1;
 }
 
 `,
@@ -116,14 +125,15 @@ message DeleteUnitRequest {
 		{
 			name: "full",
 			params: grpc.CrudParams{
-				Message:        proto.NewMessage("ModifiedUnit").SetPackageName("modified_unit.api"),
-				MessagesTarget: proto.NewFile("modified_unit"),
-				ServiceTarget:  proto.NewService("ModifiedUnitService"),
-				ParentPath:     "/tenants/*/",
-				APIBasePath:    "/api/v2",
+				Message:             proto.NewMessage("ModifiedUnit").SetPackageName("modified_unit.api"),
+				MessagesTarget:      proto.NewFile("modified_unit"),
+				ServiceTarget:       proto.NewService("ModifiedUnitService"),
+				ServiceImportTarget: proto.NewFile("services.proto"),
+				ParentPath:          "/tenants/*/",
+				APIBasePath:         "/api/v2",
 			},
 			expectedService: `service ModifiedUnitService {
-  rpc GetModifiedUnit (GetModifiedUnitRequest) returns (GetModifiedUnitResponse) {
+  rpc GetModifiedUnit (GetModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       get: "/api/v2/{name=tenants/*/modified_units/*}"
     };
@@ -133,25 +143,25 @@ message DeleteUnitRequest {
       get: "/api/v2/{parent=tenants/*}/modified_units/*"
     };
   }
-  rpc CreateModifiedUnit (CreateModifiedUnitRequest) returns (CreateModifiedUnitResponse) {
+  rpc CreateModifiedUnit (CreateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       post: "/api/v2/{parent=tenants/*}/modified_units/*"
       body: "*"
     };
   }
-  rpc UpdateModifiedUnit (UpdateModifiedUnitRequest) returns (UpdateModifiedUnitResponse) {
+  rpc UpdateModifiedUnit (UpdateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       put: "/api/v2/{name=tenants/*/modified_units/*}"
       body: "*"
     };
   }
-  rpc PatchModifiedUnit (PatchModifiedUnitRequest) returns (PatchModifiedUnitResponse) {
+  rpc PatchModifiedUnit (PatchModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       patch: "/api/v2/{name=tenants/*/modified_units/*}"
       body: "*"
     };
   }
-  rpc DeleteModifiedUnit (DeleteModifiedUnitRequest) returns (DeleteModifiedUnitResponse) {
+  rpc DeleteModifiedUnit (DeleteModifiedUnitRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/api/v2/{name=tenants/*/modified_units/*}"
     };
@@ -159,12 +169,19 @@ message DeleteUnitRequest {
 }
 
 `,
+			expectedServiceImport: `syntax = "proto3";
+
+package services.proto;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+`,
 			expectedMessages: `syntax = "proto3";
 
 package modified_unit;
 
 import "google/protobuf/field_mask.proto";
-import "google/protobuf/empty.proto";
 
 message GetModifiedUnitRequest {
   string name = 1;
@@ -190,18 +207,18 @@ message CreateModifiedUnitRequest {
 }
 
 message UpdateModifiedUnitRequest {
-  name parent = 1;
+  string name = 1;
   modified_unit.api.ModifiedUnit modified_unit = 2;
 }
 
 message PatchModifiedUnitRequest {
-  name parent = 1;
+  string name = 1;
   modified_unit.api.ModifiedUnit modified_unit = 2;
   google.protobuf.FieldMask field_mask = 3;
 }
 
 message DeleteModifiedUnitRequest {
-  name parent = 1;
+  string name = 1;
 }
 
 `,
@@ -216,10 +233,14 @@ message DeleteModifiedUnitRequest {
 			bufs := &bytes.Buffer{}
 			r.NoError(tt.params.ServiceTarget.Render(protogen.NewWriterOutput(bufs)))
 
+			bufsi := &bytes.Buffer{}
+			r.NoError(tt.params.ServiceImportTarget.Write(bufsi))
+
 			bufm := &bytes.Buffer{}
 			r.NoError(tt.params.MessagesTarget.Write(bufm))
 
 			a.Equal(tt.expectedService, bufs.String(), "services are equal")
+			a.Equal(tt.expectedServiceImport, bufsi.String(), "service imports are equal")
 			a.Equal(tt.expectedMessages, bufm.String(), "messages are equal")
 
 		})
