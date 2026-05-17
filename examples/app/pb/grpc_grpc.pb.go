@@ -8,7 +8,6 @@ package pb
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -33,6 +32,7 @@ const (
 	ExampleApiService_UpdateProductReview_FullMethodName = "/example.api.ExampleApiService/UpdateProductReview"
 	ExampleApiService_PatchProductReview_FullMethodName  = "/example.api.ExampleApiService/PatchProductReview"
 	ExampleApiService_DeleteProductReview_FullMethodName = "/example.api.ExampleApiService/DeleteProductReview"
+	ExampleApiService_ArchiveProduct_FullMethodName      = "/example.api.ExampleApiService/ArchiveProduct"
 )
 
 // ExampleApiServiceClient is the client API for ExampleApiService service.
@@ -51,6 +51,7 @@ type ExampleApiServiceClient interface {
 	UpdateProductReview(ctx context.Context, in *UpdateProductReviewRequest, opts ...grpc.CallOption) (*ProductReview, error)
 	PatchProductReview(ctx context.Context, in *PatchProductReviewRequest, opts ...grpc.CallOption) (*ProductReview, error)
 	DeleteProductReview(ctx context.Context, in *DeleteProductReviewRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	ArchiveProduct(ctx context.Context, in *ArchiveProductRequest, opts ...grpc.CallOption) (*Product, error)
 }
 
 type exampleApiServiceClient struct {
@@ -181,6 +182,16 @@ func (c *exampleApiServiceClient) DeleteProductReview(ctx context.Context, in *D
 	return out, nil
 }
 
+func (c *exampleApiServiceClient) ArchiveProduct(ctx context.Context, in *ArchiveProductRequest, opts ...grpc.CallOption) (*Product, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Product)
+	err := c.cc.Invoke(ctx, ExampleApiService_ArchiveProduct_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExampleApiServiceServer is the server API for ExampleApiService service.
 // All implementations should embed UnimplementedExampleApiServiceServer
 // for forward compatibility.
@@ -197,6 +208,7 @@ type ExampleApiServiceServer interface {
 	UpdateProductReview(context.Context, *UpdateProductReviewRequest) (*ProductReview, error)
 	PatchProductReview(context.Context, *PatchProductReviewRequest) (*ProductReview, error)
 	DeleteProductReview(context.Context, *DeleteProductReviewRequest) (*emptypb.Empty, error)
+	ArchiveProduct(context.Context, *ArchiveProductRequest) (*Product, error)
 }
 
 // UnimplementedExampleApiServiceServer should be embedded to have
@@ -241,6 +253,9 @@ func (UnimplementedExampleApiServiceServer) PatchProductReview(context.Context, 
 }
 func (UnimplementedExampleApiServiceServer) DeleteProductReview(context.Context, *DeleteProductReviewRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteProductReview not implemented")
+}
+func (UnimplementedExampleApiServiceServer) ArchiveProduct(context.Context, *ArchiveProductRequest) (*Product, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArchiveProduct not implemented")
 }
 func (UnimplementedExampleApiServiceServer) testEmbeddedByValue() {}
 
@@ -478,6 +493,24 @@ func _ExampleApiService_DeleteProductReview_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExampleApiService_ArchiveProduct_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArchiveProductRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExampleApiServiceServer).ArchiveProduct(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ExampleApiService_ArchiveProduct_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExampleApiServiceServer).ArchiveProduct(ctx, req.(*ArchiveProductRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ExampleApiService_ServiceDesc is the grpc.ServiceDesc for ExampleApiService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -532,6 +565,10 @@ var ExampleApiService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteProductReview",
 			Handler:    _ExampleApiService_DeleteProductReview_Handler,
+		},
+		{
+			MethodName: "ArchiveProduct",
+			Handler:    _ExampleApiService_ArchiveProduct_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

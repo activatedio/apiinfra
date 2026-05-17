@@ -7,7 +7,9 @@ import (
 	"github.com/activatedio/apiinfra/genlib"
 	"github.com/activatedio/apiinfra/genlib/grpc"
 	"github.com/activatedio/apiinfra/genlib/grpc/buf"
+	"github.com/activatedio/apiinfra/genlib/grpc/crud"
 	"github.com/activatedio/protogen/proto"
+	"github.com/activatedio/protogen/tfl"
 )
 
 //go:generate go run .
@@ -28,30 +30,55 @@ func main() {
 		AddImports(proto.NewImport("types.proto"))
 	stf.AddServices(st)
 
-	b := grpc.NewCrudBuilder(grpc.CrudBuilderParams{
-		MessagesTarget:      stf,
-		ServiceTarget:       st,
-		ServiceImportTarget: stf,
-		APIBasePath:         "/v1",
+	product := proto.NewMessage("Product").SetPackageName("example.api")
+	productReview := proto.NewMessage("ProductReview").SetPackageName("example.api")
+
+	mt.AddMessages(product, productReview)
+
+	sb := grpc.NewServiceBuilder(grpc.Target{
+		Messages:       stf,
+		Service:        st,
+		ServiceImports: stf,
+		APIBasePath:    "/v1",
 	})
 
-	ms := []grpc.CrudMessageParams{
-		{
-			Message: proto.NewMessage("Product").SetPackageName("example.api"),
-		},
-		{
-			Message:    proto.NewMessage("ProductReview").SetPackageName("example.api"),
+	sb.Add(
+		crud.All(crud.Resource{Message: product}),
+		crud.All(crud.Resource{
+			Message:    productReview,
 			ParentPath: "products/*",
-		},
-	}
-
-	for _, m := range ms {
-		mt.AddMessages(m.Message)
-		b.BuildCrud(m)
-	}
+		}),
+		// Escape hatch: a custom action on Product that doesn't fit the CRUD
+		// shape. The caller reaches into protogen directly through the
+		// supplied grpc.Target.
+		grpc.OperationFunc(func(t grpc.Target) {
+			t.Service.AddMethods(
+				proto.NewMethod("ArchiveProduct", proto.MethodParams{
+					RequestName:  "ArchiveProductRequest",
+					ResponseName: "example.api.Product",
+				}).AddOptions(
+					proto.NewOption("google.api.http", proto.NewMessageValueConstant(
+						tfl.NewMessageValue().AddFields(
+							tfl.NewStringField("post", "/v1/{name=products/*}:archive"),
+							tfl.NewStringField("body", "*"),
+						),
+					)),
+				),
+			)
+			t.Messages.AddMessages(
+				proto.NewMessage("ArchiveProductRequest").AddFields(
+					proto.NewField("name", proto.FieldParams{
+						FieldType: "string",
+						Number:    1,
+					}),
+				),
+			)
+		}),
+	)
 
 	bf := buf.NewFile(buf.FileParams{
-		WellKnownVersion: "v33.0",
+		WellKnownVersion:  "v33.0",
+		GoogleAPIsVersion: "72c8614f3bd0466ea67931ef2c43d608",
 		Modules: []buf.Module{
 			{
 				Path: "example",

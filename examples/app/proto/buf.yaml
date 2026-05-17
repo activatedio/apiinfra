@@ -5,8 +5,7 @@ modules:
   - name: 
     path: example
 deps:
-  - buf.build/googleapis/googleapis
-  - buf.build/grpc-ecosystem/grpc-gateway
+  - buf.build/googleapis/googleapis:72c8614f3bd0466ea67931ef2c43d608
   - buf.build/protocolbuffers/wellknowntypes:v33.0
 lint:
   use:

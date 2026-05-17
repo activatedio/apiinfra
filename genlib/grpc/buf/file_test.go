@@ -30,7 +30,8 @@ func TestFile_Write(t *testing.T) {
 			name:          "buf - simple",
 			writerFactory: bufYamlFactory,
 			params: buf.FileParams{
-				WellKnownVersion: "v1",
+				WellKnownVersion:  "v1",
+				GoogleAPIsVersion: "ga1",
 				Modules: []buf.Module{
 					{
 						Name: "name1",
@@ -43,8 +44,7 @@ version: v2
 modules:
   - name: name1
 deps:
-  - buf.build/googleapis/googleapis
-  - buf.build/grpc-ecosystem/grpc-gateway
+  - buf.build/googleapis/googleapis:ga1
   - buf.build/protocolbuffers/wellknowntypes:v1
 lint:
   use:
@@ -65,7 +65,8 @@ breaking:
 			name:          "buf - full",
 			writerFactory: bufYamlFactory,
 			params: buf.FileParams{
-				WellKnownVersion: "v1.1.1",
+				WellKnownVersion:  "v1.1.1",
+				GoogleAPIsVersion: "deadbeefcafebabe",
 				Modules: []buf.Module{
 					{
 						Name: "name1",
@@ -86,8 +87,7 @@ modules:
   - name: name2
     path: path2/name2
 deps:
-  - buf.build/googleapis/googleapis
-  - buf.build/grpc-ecosystem/grpc-gateway
+  - buf.build/googleapis/googleapis:deadbeefcafebabe
   - buf.build/protocolbuffers/wellknowntypes:v1.1.1
 lint:
   use:

@@ -11,19 +11,20 @@ option go_package = "github.com/activatedio/apiinfra/examples/app/pb";
 
 message GetProductRequest {
   string name = 1;
-  repeated string fields = 2;
+  google.protobuf.FieldMask read_mask = 2;
 }
 
 message ListProductRequest {
   string parent = 1;
-  repeated string fields = 2;
-  int32 page_size = 3;
-  string page_token = 4;
-  string selection = 5;
+  int32 page_size = 2;
+  string page_token = 3;
+  string filter = 4;
+  string order_by = 5;
+  google.protobuf.FieldMask read_mask = 6;
 }
 
 message ListProductResponse {
-  repeated example.api.Product list = 1;
+  repeated example.api.Product products = 1;
   string next_page_token = 2;
 }
 
@@ -40,7 +41,7 @@ message UpdateProductRequest {
 message PatchProductRequest {
   string name = 1;
   example.api.Product product = 2;
-  google.protobuf.FieldMask field_mask = 3;
+  google.protobuf.FieldMask update_mask = 3;
 }
 
 message DeleteProductRequest {
@@ -49,19 +50,20 @@ message DeleteProductRequest {
 
 message GetProductReviewRequest {
   string name = 1;
-  repeated string fields = 2;
+  google.protobuf.FieldMask read_mask = 2;
 }
 
 message ListProductReviewRequest {
   string parent = 1;
-  repeated string fields = 2;
-  int32 page_size = 3;
-  string page_token = 4;
-  string selection = 5;
+  int32 page_size = 2;
+  string page_token = 3;
+  string filter = 4;
+  string order_by = 5;
+  google.protobuf.FieldMask read_mask = 6;
 }
 
 message ListProductReviewResponse {
-  repeated example.api.ProductReview list = 1;
+  repeated example.api.ProductReview product_reviews = 1;
   string next_page_token = 2;
 }
 
@@ -78,10 +80,14 @@ message UpdateProductReviewRequest {
 message PatchProductReviewRequest {
   string name = 1;
   example.api.ProductReview product_review = 2;
-  google.protobuf.FieldMask field_mask = 3;
+  google.protobuf.FieldMask update_mask = 3;
 }
 
 message DeleteProductReviewRequest {
+  string name = 1;
+}
+
+message ArchiveProductRequest {
   string name = 1;
 }
 
@@ -93,12 +99,12 @@ service ExampleApiService {
   }
   rpc ListProduct (ListProductRequest) returns (ListProductResponse) {
     option (google.api.http) = {
-      get: "/v1/products/*"
+      get: "/v1/products"
     };
   }
   rpc CreateProduct (CreateProductRequest) returns (example.api.Product) {
     option (google.api.http) = {
-      post: "/v1/products/*"
+      post: "/v1/products"
       body: "*"
     };
   }
@@ -126,12 +132,12 @@ service ExampleApiService {
   }
   rpc ListProductReview (ListProductReviewRequest) returns (ListProductReviewResponse) {
     option (google.api.http) = {
-      get: "/v1/{parent=products/*}/product_reviews/*"
+      get: "/v1/{parent=products/*}/product_reviews"
     };
   }
   rpc CreateProductReview (CreateProductReviewRequest) returns (example.api.ProductReview) {
     option (google.api.http) = {
-      post: "/v1/{parent=products/*}/product_reviews/*"
+      post: "/v1/{parent=products/*}/product_reviews"
       body: "*"
     };
   }
@@ -150,6 +156,12 @@ service ExampleApiService {
   rpc DeleteProductReview (DeleteProductReviewRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
       delete: "/v1/{name=products/*/product_reviews/*}"
+    };
+  }
+  rpc ArchiveProduct (ArchiveProductRequest) returns (example.api.Product) {
+    option (google.api.http) = {
+      post: "/v1/{name=products/*}:archive"
+      body: "*"
     };
   }
 }

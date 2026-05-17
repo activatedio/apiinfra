@@ -7,15 +7,14 @@
 package pb
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	fieldmaskpb "google.golang.org/protobuf/types/known/fieldmaskpb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -28,7 +27,7 @@ const (
 type GetProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Fields        []string               `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
+	ReadMask      *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=read_mask,json=readMask,proto3" json:"read_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -70,9 +69,9 @@ func (x *GetProductRequest) GetName() string {
 	return ""
 }
 
-func (x *GetProductRequest) GetFields() []string {
+func (x *GetProductRequest) GetReadMask() *fieldmaskpb.FieldMask {
 	if x != nil {
-		return x.Fields
+		return x.ReadMask
 	}
 	return nil
 }
@@ -80,10 +79,11 @@ func (x *GetProductRequest) GetFields() []string {
 type ListProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Parent        string                 `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
-	Fields        []string               `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	PageToken     string                 `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	Selection     string                 `protobuf:"bytes,5,opt,name=selection,proto3" json:"selection,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	Filter        string                 `protobuf:"bytes,4,opt,name=filter,proto3" json:"filter,omitempty"`
+	OrderBy       string                 `protobuf:"bytes,5,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	ReadMask      *fieldmaskpb.FieldMask `protobuf:"bytes,6,opt,name=read_mask,json=readMask,proto3" json:"read_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -125,13 +125,6 @@ func (x *ListProductRequest) GetParent() string {
 	return ""
 }
 
-func (x *ListProductRequest) GetFields() []string {
-	if x != nil {
-		return x.Fields
-	}
-	return nil
-}
-
 func (x *ListProductRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
@@ -146,16 +139,30 @@ func (x *ListProductRequest) GetPageToken() string {
 	return ""
 }
 
-func (x *ListProductRequest) GetSelection() string {
+func (x *ListProductRequest) GetFilter() string {
 	if x != nil {
-		return x.Selection
+		return x.Filter
 	}
 	return ""
 }
 
+func (x *ListProductRequest) GetOrderBy() string {
+	if x != nil {
+		return x.OrderBy
+	}
+	return ""
+}
+
+func (x *ListProductRequest) GetReadMask() *fieldmaskpb.FieldMask {
+	if x != nil {
+		return x.ReadMask
+	}
+	return nil
+}
+
 type ListProductResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	List          []*Product             `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
+	Products      []*Product             `protobuf:"bytes,1,rep,name=products,proto3" json:"products,omitempty"`
 	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -191,9 +198,9 @@ func (*ListProductResponse) Descriptor() ([]byte, []int) {
 	return file_grpc_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ListProductResponse) GetList() []*Product {
+func (x *ListProductResponse) GetProducts() []*Product {
 	if x != nil {
-		return x.List
+		return x.Products
 	}
 	return nil
 }
@@ -313,7 +320,7 @@ type PatchProductRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Product       *Product               `protobuf:"bytes,2,opt,name=product,proto3" json:"product,omitempty"`
-	FieldMask     *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -362,9 +369,9 @@ func (x *PatchProductRequest) GetProduct() *Product {
 	return nil
 }
 
-func (x *PatchProductRequest) GetFieldMask() *fieldmaskpb.FieldMask {
+func (x *PatchProductRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
 	if x != nil {
-		return x.FieldMask
+		return x.UpdateMask
 	}
 	return nil
 }
@@ -416,7 +423,7 @@ func (x *DeleteProductRequest) GetName() string {
 type GetProductReviewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Fields        []string               `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
+	ReadMask      *fieldmaskpb.FieldMask `protobuf:"bytes,2,opt,name=read_mask,json=readMask,proto3" json:"read_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -458,9 +465,9 @@ func (x *GetProductReviewRequest) GetName() string {
 	return ""
 }
 
-func (x *GetProductReviewRequest) GetFields() []string {
+func (x *GetProductReviewRequest) GetReadMask() *fieldmaskpb.FieldMask {
 	if x != nil {
-		return x.Fields
+		return x.ReadMask
 	}
 	return nil
 }
@@ -468,10 +475,11 @@ func (x *GetProductReviewRequest) GetFields() []string {
 type ListProductReviewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Parent        string                 `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
-	Fields        []string               `protobuf:"bytes,2,rep,name=fields,proto3" json:"fields,omitempty"`
-	PageSize      int32                  `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
-	PageToken     string                 `protobuf:"bytes,4,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
-	Selection     string                 `protobuf:"bytes,5,opt,name=selection,proto3" json:"selection,omitempty"`
+	PageSize      int32                  `protobuf:"varint,2,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
+	PageToken     string                 `protobuf:"bytes,3,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
+	Filter        string                 `protobuf:"bytes,4,opt,name=filter,proto3" json:"filter,omitempty"`
+	OrderBy       string                 `protobuf:"bytes,5,opt,name=order_by,json=orderBy,proto3" json:"order_by,omitempty"`
+	ReadMask      *fieldmaskpb.FieldMask `protobuf:"bytes,6,opt,name=read_mask,json=readMask,proto3" json:"read_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -513,13 +521,6 @@ func (x *ListProductReviewRequest) GetParent() string {
 	return ""
 }
 
-func (x *ListProductReviewRequest) GetFields() []string {
-	if x != nil {
-		return x.Fields
-	}
-	return nil
-}
-
 func (x *ListProductReviewRequest) GetPageSize() int32 {
 	if x != nil {
 		return x.PageSize
@@ -534,19 +535,33 @@ func (x *ListProductReviewRequest) GetPageToken() string {
 	return ""
 }
 
-func (x *ListProductReviewRequest) GetSelection() string {
+func (x *ListProductReviewRequest) GetFilter() string {
 	if x != nil {
-		return x.Selection
+		return x.Filter
 	}
 	return ""
 }
 
+func (x *ListProductReviewRequest) GetOrderBy() string {
+	if x != nil {
+		return x.OrderBy
+	}
+	return ""
+}
+
+func (x *ListProductReviewRequest) GetReadMask() *fieldmaskpb.FieldMask {
+	if x != nil {
+		return x.ReadMask
+	}
+	return nil
+}
+
 type ListProductReviewResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	List          []*ProductReview       `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
-	NextPageToken string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	ProductReviews []*ProductReview       `protobuf:"bytes,1,rep,name=product_reviews,json=productReviews,proto3" json:"product_reviews,omitempty"`
+	NextPageToken  string                 `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken,proto3" json:"next_page_token,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ListProductReviewResponse) Reset() {
@@ -579,9 +594,9 @@ func (*ListProductReviewResponse) Descriptor() ([]byte, []int) {
 	return file_grpc_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *ListProductReviewResponse) GetList() []*ProductReview {
+func (x *ListProductReviewResponse) GetProductReviews() []*ProductReview {
 	if x != nil {
-		return x.List
+		return x.ProductReviews
 	}
 	return nil
 }
@@ -701,7 +716,7 @@ type PatchProductReviewRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	ProductReview *ProductReview         `protobuf:"bytes,2,opt,name=product_review,json=productReview,proto3" json:"product_review,omitempty"`
-	FieldMask     *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=field_mask,json=fieldMask,proto3" json:"field_mask,omitempty"`
+	UpdateMask    *fieldmaskpb.FieldMask `protobuf:"bytes,3,opt,name=update_mask,json=updateMask,proto3" json:"update_mask,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -750,9 +765,9 @@ func (x *PatchProductReviewRequest) GetProductReview() *ProductReview {
 	return nil
 }
 
-func (x *PatchProductReviewRequest) GetFieldMask() *fieldmaskpb.FieldMask {
+func (x *PatchProductReviewRequest) GetUpdateMask() *fieldmaskpb.FieldMask {
 	if x != nil {
-		return x.FieldMask
+		return x.UpdateMask
 	}
 	return nil
 }
@@ -801,78 +816,127 @@ func (x *DeleteProductReviewRequest) GetName() string {
 	return ""
 }
 
+type ArchiveProductRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ArchiveProductRequest) Reset() {
+	*x = ArchiveProductRequest{}
+	mi := &file_grpc_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ArchiveProductRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ArchiveProductRequest) ProtoMessage() {}
+
+func (x *ArchiveProductRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_grpc_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ArchiveProductRequest.ProtoReflect.Descriptor instead.
+func (*ArchiveProductRequest) Descriptor() ([]byte, []int) {
+	return file_grpc_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ArchiveProductRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
 var File_grpc_proto protoreflect.FileDescriptor
 
 const file_grpc_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"grpc.proto\x12\vexample.api\x1a\vtypes.proto\x1a\x1cgoogle/api/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1bgoogle/protobuf/empty.proto\"?\n" +
+	"grpc.proto\x12\vexample.api\x1a\vtypes.proto\x1a\x1cgoogle/api/annotations.proto\x1a google/protobuf/field_mask.proto\x1a\x1bgoogle/protobuf/empty.proto\"`\n" +
 	"\x11GetProductRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06fields\x18\x02 \x03(\tR\x06fields\"\x9e\x01\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x127\n" +
+	"\tread_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\breadMask\"\xd4\x01\n" +
 	"\x12ListProductRequest\x12\x16\n" +
-	"\x06parent\x18\x01 \x01(\tR\x06parent\x12\x16\n" +
-	"\x06fields\x18\x02 \x03(\tR\x06fields\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\x06parent\x18\x01 \x01(\tR\x06parent\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\x12\x1c\n" +
-	"\tselection\x18\x05 \x01(\tR\tselection\"g\n" +
-	"\x13ListProductResponse\x12(\n" +
-	"\x04list\x18\x01 \x03(\v2\x14.example.api.ProductR\x04list\x12&\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\x12\x16\n" +
+	"\x06filter\x18\x04 \x01(\tR\x06filter\x12\x19\n" +
+	"\border_by\x18\x05 \x01(\tR\aorderBy\x127\n" +
+	"\tread_mask\x18\x06 \x01(\v2\x1a.google.protobuf.FieldMaskR\breadMask\"o\n" +
+	"\x13ListProductResponse\x120\n" +
+	"\bproducts\x18\x01 \x03(\v2\x14.example.api.ProductR\bproducts\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"^\n" +
 	"\x14CreateProductRequest\x12\x16\n" +
 	"\x06parent\x18\x01 \x01(\tR\x06parent\x12.\n" +
 	"\aproduct\x18\x02 \x01(\v2\x14.example.api.ProductR\aproduct\"Z\n" +
 	"\x14UpdateProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12.\n" +
-	"\aproduct\x18\x02 \x01(\v2\x14.example.api.ProductR\aproduct\"\x94\x01\n" +
+	"\aproduct\x18\x02 \x01(\v2\x14.example.api.ProductR\aproduct\"\x96\x01\n" +
 	"\x13PatchProductRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12.\n" +
-	"\aproduct\x18\x02 \x01(\v2\x14.example.api.ProductR\aproduct\x129\n" +
-	"\n" +
-	"field_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\tfieldMask\"*\n" +
+	"\aproduct\x18\x02 \x01(\v2\x14.example.api.ProductR\aproduct\x12;\n" +
+	"\vupdate_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
+	"updateMask\"*\n" +
 	"\x14DeleteProductRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"E\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"f\n" +
 	"\x17GetProductReviewRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
-	"\x06fields\x18\x02 \x03(\tR\x06fields\"\xa4\x01\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x127\n" +
+	"\tread_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskR\breadMask\"\xda\x01\n" +
 	"\x18ListProductReviewRequest\x12\x16\n" +
-	"\x06parent\x18\x01 \x01(\tR\x06parent\x12\x16\n" +
-	"\x06fields\x18\x02 \x03(\tR\x06fields\x12\x1b\n" +
-	"\tpage_size\x18\x03 \x01(\x05R\bpageSize\x12\x1d\n" +
+	"\x06parent\x18\x01 \x01(\tR\x06parent\x12\x1b\n" +
+	"\tpage_size\x18\x02 \x01(\x05R\bpageSize\x12\x1d\n" +
 	"\n" +
-	"page_token\x18\x04 \x01(\tR\tpageToken\x12\x1c\n" +
-	"\tselection\x18\x05 \x01(\tR\tselection\"s\n" +
-	"\x19ListProductReviewResponse\x12.\n" +
-	"\x04list\x18\x01 \x03(\v2\x1a.example.api.ProductReviewR\x04list\x12&\n" +
+	"page_token\x18\x03 \x01(\tR\tpageToken\x12\x16\n" +
+	"\x06filter\x18\x04 \x01(\tR\x06filter\x12\x19\n" +
+	"\border_by\x18\x05 \x01(\tR\aorderBy\x127\n" +
+	"\tread_mask\x18\x06 \x01(\v2\x1a.google.protobuf.FieldMaskR\breadMask\"\x88\x01\n" +
+	"\x19ListProductReviewResponse\x12C\n" +
+	"\x0fproduct_reviews\x18\x01 \x03(\v2\x1a.example.api.ProductReviewR\x0eproductReviews\x12&\n" +
 	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"w\n" +
 	"\x1aCreateProductReviewRequest\x12\x16\n" +
 	"\x06parent\x18\x01 \x01(\tR\x06parent\x12A\n" +
 	"\x0eproduct_review\x18\x02 \x01(\v2\x1a.example.api.ProductReviewR\rproductReview\"s\n" +
 	"\x1aUpdateProductReviewRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12A\n" +
-	"\x0eproduct_review\x18\x02 \x01(\v2\x1a.example.api.ProductReviewR\rproductReview\"\xad\x01\n" +
+	"\x0eproduct_review\x18\x02 \x01(\v2\x1a.example.api.ProductReviewR\rproductReview\"\xaf\x01\n" +
 	"\x19PatchProductReviewRequest\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12A\n" +
-	"\x0eproduct_review\x18\x02 \x01(\v2\x1a.example.api.ProductReviewR\rproductReview\x129\n" +
-	"\n" +
-	"field_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\tfieldMask\"0\n" +
+	"\x0eproduct_review\x18\x02 \x01(\v2\x1a.example.api.ProductReviewR\rproductReview\x12;\n" +
+	"\vupdate_mask\x18\x03 \x01(\v2\x1a.google.protobuf.FieldMaskR\n" +
+	"updateMask\"0\n" +
 	"\x1aDeleteProductReviewRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name2\xe3\v\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\"+\n" +
+	"\x15ArchiveProductRequest\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name2\xd1\f\n" +
 	"\x11ExampleApiService\x12a\n" +
 	"\n" +
-	"GetProduct\x12\x1e.example.api.GetProductRequest\x1a\x14.example.api.Product\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/{name=products/*}\x12h\n" +
-	"\vListProduct\x12\x1f.example.api.ListProductRequest\x1a .example.api.ListProductResponse\"\x16\x82\xd3\xe4\x93\x02\x10\x12\x0e/v1/products/*\x12c\n" +
-	"\rCreateProduct\x12!.example.api.CreateProductRequest\x1a\x14.example.api.Product\"\x19\x82\xd3\xe4\x93\x02\x13:\x01*\"\x0e/v1/products/*\x12j\n" +
+	"GetProduct\x12\x1e.example.api.GetProductRequest\x1a\x14.example.api.Product\"\x1d\x82\xd3\xe4\x93\x02\x17\x12\x15/v1/{name=products/*}\x12f\n" +
+	"\vListProduct\x12\x1f.example.api.ListProductRequest\x1a .example.api.ListProductResponse\"\x14\x82\xd3\xe4\x93\x02\x0e\x12\f/v1/products\x12a\n" +
+	"\rCreateProduct\x12!.example.api.CreateProductRequest\x1a\x14.example.api.Product\"\x17\x82\xd3\xe4\x93\x02\x11:\x01*\"\f/v1/products\x12j\n" +
 	"\rUpdateProduct\x12!.example.api.UpdateProductRequest\x1a\x14.example.api.Product\" \x82\xd3\xe4\x93\x02\x1a:\x01*\x1a\x15/v1/{name=products/*}\x12h\n" +
 	"\fPatchProduct\x12 .example.api.PatchProductRequest\x1a\x14.example.api.Product\" \x82\xd3\xe4\x93\x02\x1a:\x01*2\x15/v1/{name=products/*}\x12i\n" +
 	"\rDeleteProduct\x12!.example.api.DeleteProductRequest\x1a\x16.google.protobuf.Empty\"\x1d\x82\xd3\xe4\x93\x02\x17*\x15/v1/{name=products/*}\x12\x85\x01\n" +
-	"\x10GetProductReview\x12$.example.api.GetProductReviewRequest\x1a\x1a.example.api.ProductReview\"/\x82\xd3\xe4\x93\x02)\x12'/v1/{name=products/*/product_reviews/*}\x12\x95\x01\n" +
-	"\x11ListProductReview\x12%.example.api.ListProductReviewRequest\x1a&.example.api.ListProductReviewResponse\"1\x82\xd3\xe4\x93\x02+\x12)/v1/{parent=products/*}/product_reviews/*\x12\x90\x01\n" +
-	"\x13CreateProductReview\x12'.example.api.CreateProductReviewRequest\x1a\x1a.example.api.ProductReview\"4\x82\xd3\xe4\x93\x02.:\x01*\")/v1/{parent=products/*}/product_reviews/*\x12\x8e\x01\n" +
+	"\x10GetProductReview\x12$.example.api.GetProductReviewRequest\x1a\x1a.example.api.ProductReview\"/\x82\xd3\xe4\x93\x02)\x12'/v1/{name=products/*/product_reviews/*}\x12\x93\x01\n" +
+	"\x11ListProductReview\x12%.example.api.ListProductReviewRequest\x1a&.example.api.ListProductReviewResponse\"/\x82\xd3\xe4\x93\x02)\x12'/v1/{parent=products/*}/product_reviews\x12\x8e\x01\n" +
+	"\x13CreateProductReview\x12'.example.api.CreateProductReviewRequest\x1a\x1a.example.api.ProductReview\"2\x82\xd3\xe4\x93\x02,:\x01*\"'/v1/{parent=products/*}/product_reviews\x12\x8e\x01\n" +
 	"\x13UpdateProductReview\x12'.example.api.UpdateProductReviewRequest\x1a\x1a.example.api.ProductReview\"2\x82\xd3\xe4\x93\x02,:\x01*\x1a'/v1/{name=products/*/product_reviews/*}\x12\x8c\x01\n" +
 	"\x12PatchProductReview\x12&.example.api.PatchProductReviewRequest\x1a\x1a.example.api.ProductReview\"2\x82\xd3\xe4\x93\x02,:\x01*2'/v1/{name=products/*/product_reviews/*}\x12\x87\x01\n" +
-	"\x13DeleteProductReview\x12'.example.api.DeleteProductReviewRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02)*'/v1/{name=products/*/product_reviews/*}B\x9a\x01\n" +
+	"\x13DeleteProductReview\x12'.example.api.DeleteProductReviewRequest\x1a\x16.google.protobuf.Empty\"/\x82\xd3\xe4\x93\x02)*'/v1/{name=products/*/product_reviews/*}\x12t\n" +
+	"\x0eArchiveProduct\x12\".example.api.ArchiveProductRequest\x1a\x14.example.api.Product\"(\x82\xd3\xe4\x93\x02\":\x01*\"\x1d/v1/{name=products/*}:archiveB\x9a\x01\n" +
 	"\x0fcom.example.apiB\tGrpcProtoP\x01Z/github.com/activatedio/apiinfra/examples/app/pb\xa2\x02\x03EAX\xaa\x02\vExample.Api\xca\x02\vExample\\Api\xe2\x02\x17Example\\Api\\GPBMetadata\xea\x02\fExample::Apib\x06proto3"
 
 var (
@@ -887,7 +951,7 @@ func file_grpc_proto_rawDescGZIP() []byte {
 	return file_grpc_proto_rawDescData
 }
 
-var file_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_grpc_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_grpc_proto_goTypes = []any{
 	(*GetProductRequest)(nil),          // 0: example.api.GetProductRequest
 	(*ListProductRequest)(nil),         // 1: example.api.ListProductRequest
@@ -903,51 +967,58 @@ var file_grpc_proto_goTypes = []any{
 	(*UpdateProductReviewRequest)(nil), // 11: example.api.UpdateProductReviewRequest
 	(*PatchProductReviewRequest)(nil),  // 12: example.api.PatchProductReviewRequest
 	(*DeleteProductReviewRequest)(nil), // 13: example.api.DeleteProductReviewRequest
-	(*Product)(nil),                    // 14: example.api.Product
+	(*ArchiveProductRequest)(nil),      // 14: example.api.ArchiveProductRequest
 	(*fieldmaskpb.FieldMask)(nil),      // 15: google.protobuf.FieldMask
-	(*ProductReview)(nil),              // 16: example.api.ProductReview
-	(*emptypb.Empty)(nil),              // 17: google.protobuf.Empty
+	(*Product)(nil),                    // 16: example.api.Product
+	(*ProductReview)(nil),              // 17: example.api.ProductReview
+	(*emptypb.Empty)(nil),              // 18: google.protobuf.Empty
 }
 var file_grpc_proto_depIdxs = []int32{
-	14, // 0: example.api.ListProductResponse.list:type_name -> example.api.Product
-	14, // 1: example.api.CreateProductRequest.product:type_name -> example.api.Product
-	14, // 2: example.api.UpdateProductRequest.product:type_name -> example.api.Product
-	14, // 3: example.api.PatchProductRequest.product:type_name -> example.api.Product
-	15, // 4: example.api.PatchProductRequest.field_mask:type_name -> google.protobuf.FieldMask
-	16, // 5: example.api.ListProductReviewResponse.list:type_name -> example.api.ProductReview
-	16, // 6: example.api.CreateProductReviewRequest.product_review:type_name -> example.api.ProductReview
-	16, // 7: example.api.UpdateProductReviewRequest.product_review:type_name -> example.api.ProductReview
-	16, // 8: example.api.PatchProductReviewRequest.product_review:type_name -> example.api.ProductReview
-	15, // 9: example.api.PatchProductReviewRequest.field_mask:type_name -> google.protobuf.FieldMask
-	0,  // 10: example.api.ExampleApiService.GetProduct:input_type -> example.api.GetProductRequest
-	1,  // 11: example.api.ExampleApiService.ListProduct:input_type -> example.api.ListProductRequest
-	3,  // 12: example.api.ExampleApiService.CreateProduct:input_type -> example.api.CreateProductRequest
-	4,  // 13: example.api.ExampleApiService.UpdateProduct:input_type -> example.api.UpdateProductRequest
-	5,  // 14: example.api.ExampleApiService.PatchProduct:input_type -> example.api.PatchProductRequest
-	6,  // 15: example.api.ExampleApiService.DeleteProduct:input_type -> example.api.DeleteProductRequest
-	7,  // 16: example.api.ExampleApiService.GetProductReview:input_type -> example.api.GetProductReviewRequest
-	8,  // 17: example.api.ExampleApiService.ListProductReview:input_type -> example.api.ListProductReviewRequest
-	10, // 18: example.api.ExampleApiService.CreateProductReview:input_type -> example.api.CreateProductReviewRequest
-	11, // 19: example.api.ExampleApiService.UpdateProductReview:input_type -> example.api.UpdateProductReviewRequest
-	12, // 20: example.api.ExampleApiService.PatchProductReview:input_type -> example.api.PatchProductReviewRequest
-	13, // 21: example.api.ExampleApiService.DeleteProductReview:input_type -> example.api.DeleteProductReviewRequest
-	14, // 22: example.api.ExampleApiService.GetProduct:output_type -> example.api.Product
-	2,  // 23: example.api.ExampleApiService.ListProduct:output_type -> example.api.ListProductResponse
-	14, // 24: example.api.ExampleApiService.CreateProduct:output_type -> example.api.Product
-	14, // 25: example.api.ExampleApiService.UpdateProduct:output_type -> example.api.Product
-	14, // 26: example.api.ExampleApiService.PatchProduct:output_type -> example.api.Product
-	17, // 27: example.api.ExampleApiService.DeleteProduct:output_type -> google.protobuf.Empty
-	16, // 28: example.api.ExampleApiService.GetProductReview:output_type -> example.api.ProductReview
-	9,  // 29: example.api.ExampleApiService.ListProductReview:output_type -> example.api.ListProductReviewResponse
-	16, // 30: example.api.ExampleApiService.CreateProductReview:output_type -> example.api.ProductReview
-	16, // 31: example.api.ExampleApiService.UpdateProductReview:output_type -> example.api.ProductReview
-	16, // 32: example.api.ExampleApiService.PatchProductReview:output_type -> example.api.ProductReview
-	17, // 33: example.api.ExampleApiService.DeleteProductReview:output_type -> google.protobuf.Empty
-	22, // [22:34] is the sub-list for method output_type
-	10, // [10:22] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	15, // 0: example.api.GetProductRequest.read_mask:type_name -> google.protobuf.FieldMask
+	15, // 1: example.api.ListProductRequest.read_mask:type_name -> google.protobuf.FieldMask
+	16, // 2: example.api.ListProductResponse.products:type_name -> example.api.Product
+	16, // 3: example.api.CreateProductRequest.product:type_name -> example.api.Product
+	16, // 4: example.api.UpdateProductRequest.product:type_name -> example.api.Product
+	16, // 5: example.api.PatchProductRequest.product:type_name -> example.api.Product
+	15, // 6: example.api.PatchProductRequest.update_mask:type_name -> google.protobuf.FieldMask
+	15, // 7: example.api.GetProductReviewRequest.read_mask:type_name -> google.protobuf.FieldMask
+	15, // 8: example.api.ListProductReviewRequest.read_mask:type_name -> google.protobuf.FieldMask
+	17, // 9: example.api.ListProductReviewResponse.product_reviews:type_name -> example.api.ProductReview
+	17, // 10: example.api.CreateProductReviewRequest.product_review:type_name -> example.api.ProductReview
+	17, // 11: example.api.UpdateProductReviewRequest.product_review:type_name -> example.api.ProductReview
+	17, // 12: example.api.PatchProductReviewRequest.product_review:type_name -> example.api.ProductReview
+	15, // 13: example.api.PatchProductReviewRequest.update_mask:type_name -> google.protobuf.FieldMask
+	0,  // 14: example.api.ExampleApiService.GetProduct:input_type -> example.api.GetProductRequest
+	1,  // 15: example.api.ExampleApiService.ListProduct:input_type -> example.api.ListProductRequest
+	3,  // 16: example.api.ExampleApiService.CreateProduct:input_type -> example.api.CreateProductRequest
+	4,  // 17: example.api.ExampleApiService.UpdateProduct:input_type -> example.api.UpdateProductRequest
+	5,  // 18: example.api.ExampleApiService.PatchProduct:input_type -> example.api.PatchProductRequest
+	6,  // 19: example.api.ExampleApiService.DeleteProduct:input_type -> example.api.DeleteProductRequest
+	7,  // 20: example.api.ExampleApiService.GetProductReview:input_type -> example.api.GetProductReviewRequest
+	8,  // 21: example.api.ExampleApiService.ListProductReview:input_type -> example.api.ListProductReviewRequest
+	10, // 22: example.api.ExampleApiService.CreateProductReview:input_type -> example.api.CreateProductReviewRequest
+	11, // 23: example.api.ExampleApiService.UpdateProductReview:input_type -> example.api.UpdateProductReviewRequest
+	12, // 24: example.api.ExampleApiService.PatchProductReview:input_type -> example.api.PatchProductReviewRequest
+	13, // 25: example.api.ExampleApiService.DeleteProductReview:input_type -> example.api.DeleteProductReviewRequest
+	14, // 26: example.api.ExampleApiService.ArchiveProduct:input_type -> example.api.ArchiveProductRequest
+	16, // 27: example.api.ExampleApiService.GetProduct:output_type -> example.api.Product
+	2,  // 28: example.api.ExampleApiService.ListProduct:output_type -> example.api.ListProductResponse
+	16, // 29: example.api.ExampleApiService.CreateProduct:output_type -> example.api.Product
+	16, // 30: example.api.ExampleApiService.UpdateProduct:output_type -> example.api.Product
+	16, // 31: example.api.ExampleApiService.PatchProduct:output_type -> example.api.Product
+	18, // 32: example.api.ExampleApiService.DeleteProduct:output_type -> google.protobuf.Empty
+	17, // 33: example.api.ExampleApiService.GetProductReview:output_type -> example.api.ProductReview
+	9,  // 34: example.api.ExampleApiService.ListProductReview:output_type -> example.api.ListProductReviewResponse
+	17, // 35: example.api.ExampleApiService.CreateProductReview:output_type -> example.api.ProductReview
+	17, // 36: example.api.ExampleApiService.UpdateProductReview:output_type -> example.api.ProductReview
+	17, // 37: example.api.ExampleApiService.PatchProductReview:output_type -> example.api.ProductReview
+	18, // 38: example.api.ExampleApiService.DeleteProductReview:output_type -> google.protobuf.Empty
+	16, // 39: example.api.ExampleApiService.ArchiveProduct:output_type -> example.api.Product
+	27, // [27:40] is the sub-list for method output_type
+	14, // [14:27] is the sub-list for method input_type
+	14, // [14:14] is the sub-list for extension type_name
+	14, // [14:14] is the sub-list for extension extendee
+	0,  // [0:14] is the sub-list for field type_name
 }
 
 func init() { file_grpc_proto_init() }
@@ -962,7 +1033,7 @@ func file_grpc_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_grpc_proto_rawDesc), len(file_grpc_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

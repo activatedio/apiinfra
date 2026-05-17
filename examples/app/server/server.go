@@ -70,6 +70,11 @@ func (s *server) DeleteProductReview(_ context.Context, _ *pb.DeleteProductRevie
 	panic("implement me")
 }
 
+func (s *server) ArchiveProduct(_ context.Context, _ *pb.ArchiveProductRequest) (*pb.Product, error) {
+	// TODO implement me
+	panic("implement me")
+}
+
 // NewAPIServer returns a new instance of the example gRPC server.
 func NewAPIServer() pb.ExampleApiServiceServer {
 	return &server{}
