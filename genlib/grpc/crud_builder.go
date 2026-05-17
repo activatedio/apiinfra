@@ -51,6 +51,7 @@ func (c *crudBuilder) BuildDelete(params CrudMessageParams) {
 	BuildDelete(c.buildCrudParams(params))
 }
 
+// NewCrudBuilder returns a CrudBuilder configured with the supplied parameters.
 func NewCrudBuilder(params CrudBuilderParams) CrudBuilder {
 	return &crudBuilder{
 		MessagesTarget:      params.MessagesTarget,

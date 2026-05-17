@@ -1,3 +1,4 @@
+// Package buf provides helpers for generating buf configuration files.
 package buf
 
 import (
@@ -102,6 +103,7 @@ func (f *file) WriteGenGo(w io.Writer) error {
 	return tmpl.Execute(w, &f.params)
 }
 
+// NewFile returns a File configured with the supplied FileParams.
 func NewFile(params FileParams) File {
 	return &file{
 		params: params,

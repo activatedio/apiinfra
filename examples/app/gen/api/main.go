@@ -1,3 +1,4 @@
+// Package main runs the example proto generation.
 package main
 
 import (

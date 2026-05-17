@@ -15,6 +15,7 @@ var (
 )
 
 const (
+	// EmptyMessageName is the fully qualified name of the well-known Empty message.
 	EmptyMessageName = "google.protobuf.Empty"
 )
 
@@ -38,6 +39,7 @@ func (c CrudParams) GetNormalizedParentPath() string {
 	return strings.TrimSuffix(strings.TrimPrefix(c.ParentPath, "/"), "/")
 }
 
+// BuildCrudHeaders adds the imports required by the generated crud service definitions.
 func BuildCrudHeaders(params CrudParams) {
 	params.ServiceImportTarget.AddImports(proto.NewImport("google/api/annotations.proto"))
 }
@@ -239,7 +241,7 @@ func namePath(params CrudParams) string {
 		npp += "/"
 	}
 
-	sb.WriteString(fmt.Sprintf("/{name=%s%s/*}", npp, params.GetPluralAPIMessageName()))
+	fmt.Fprintf(&sb, "/{name=%s%s/*}", npp, params.GetPluralAPIMessageName())
 
 	return sb.String()
 
@@ -254,9 +256,9 @@ func parentPath(params CrudParams) string {
 	npp := params.GetNormalizedParentPath()
 
 	if npp == "" {
-		sb.WriteString(fmt.Sprintf("/%s", params.GetPluralAPIMessageName()))
+		fmt.Fprintf(&sb, "/%s", params.GetPluralAPIMessageName())
 	} else {
-		sb.WriteString(fmt.Sprintf("/{parent=%s}/%s", npp, params.GetPluralAPIMessageName()))
+		fmt.Fprintf(&sb, "/{parent=%s}/%s", npp, params.GetPluralAPIMessageName())
 	}
 
 	return sb.String()

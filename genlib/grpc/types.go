@@ -23,7 +23,7 @@ type CrudParams struct {
 	APIBasePath string
 }
 
-// CrudParams contains the options to build the crud service
+// CrudBuilderParams contains the shared options for constructing a CrudBuilder.
 type CrudBuilderParams struct {
 	// MessagesTarget is the file to add messages to
 	MessagesTarget proto.File
@@ -34,6 +34,7 @@ type CrudBuilderParams struct {
 	APIBasePath string
 }
 
+// CrudMessageParams describes a single message for which crud operations should be generated.
 type CrudMessageParams struct {
 	// Message is the message definition for the crud endpoints
 	Message proto.Message
@@ -46,6 +47,7 @@ func (rr RequestResponse) Messages() []proto.Message {
 	return []proto.Message{rr.Request, rr.Response}
 }
 
+// CrudBuilder generates crud operations on a configured proto service.
 type CrudBuilder interface {
 	BuildCrud(params CrudMessageParams)
 	BuildGet(params CrudMessageParams)
