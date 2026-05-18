@@ -1,24 +1,39 @@
 # apiinfra
 
-A code-generation library that emits gRPC + grpc-gateway API definitions from Go inputs. The pitch: declare your resources and their operations in Go, get standards-aligned `.proto`, `buf.yaml`/`buf.gen.yaml`, and `.pb.go` outputs.
+Two halves for building Go gRPC + grpc-gateway services:
+
+1. **Generation** (`./genlib`) — Build-time code that emits `.proto`, buf config, and `.pb.go` from Go declarations.
+2. **Runtime** (`./pkg`) — Minimal runtime helpers consumed by the running service (config loading, HTTP/gRPC listeners).
+
+Consumers (e.g. `gitlab.authwise.io/authwise/authwise-portal`) keep domain logic, gen entry points, fx Index modules, and `main` packages in their own tree; everything cross-cutting and non-domain-specific belongs here.
 
 ## Repo layout
 
 ```
-genlib/             # code that generates other code (build-time only)
+genlib/             # build-time: code that generates other code
   grpc/
-    operation.go    # core abstraction: Target, Operation, OperationFunc
+    operation.go        # core abstraction: Target, Operation, OperationFunc
     service_builder.go  # ServiceBuilder applies Operations to a Target
-    util.go         # small protogen helpers
-    crud/           # CRUD op family (Get, List, Create, Update, Patch, Delete)
-    buf/            # renders buf.yaml, buf.gen.yaml, gen.go
-pkg/                # runtime support imported by generated services (kept minimal)
-examples/app/       # end-to-end example of the generator
-  gen/api/main.go   # generator entry point (go:generate target)
-  proto/            # generated .proto + buf config + go:generate hook
-  pb/               # buf-produced .pb.go files
-  server/           # hand-written service implementation stubs
+    util.go             # small protogen helpers
+    crud/               # CRUD op family (Get, List, Create, Update, Patch, Delete)
+    buf/                # renders buf.yaml, buf.gen.yaml, gen.go
+pkg/                # runtime: linked into the consumer's service binary
+  config/             # cs-based config loader (YAML/JSON + env)
+  gateway/            # gRPC + grpc-gateway and gRPC-only fx listeners
+  service/            # placeholder for future cross-service runtime helpers
+examples/app/       # end-to-end example of the generator (does not wire pkg/gateway)
+  gen/api/main.go       # generator entry point (go:generate target)
+  proto/                # generated .proto + buf config + go:generate hook
+  pb/                   # buf-produced .pb.go files
+  server/               # hand-written service implementation stubs
 ```
+
+### `genlib/` vs `pkg/` — what goes where
+
+- `genlib/` is **build-time-only**. It runs from `gen/` packages in the consumer (or `examples/app/gen/api/main.go` here). Generator code can `panic` via `genlib.Check`/`CheckClose` — failure means a broken codegen run, not a runtime fault.
+- `pkg/` is **linked into the running service binary**. It must not panic for caller mistakes — return errors and let the caller decide. The two exceptions in `pkg/gateway` are bind failures and `MTLSAlways` misconfiguration, which are startup-time invariants that should fail fast.
+
+When adding a new feature, decide which half it belongs in by asking: does this run during `go generate`, or during `./service run`?
 
 ## Two generation stages
 
@@ -102,6 +117,38 @@ The generated CRUD output targets Google AIP-132/134 conventions:
 
 When adding new op families or custom methods, follow these conventions unless there's a specific reason not to.
 
+## Runtime packages (`pkg/`)
+
+### `pkg/config`
+
+`NewConfig(paths ...string) cs.Config` builds a `cs.Config` tree:
+- file paths from `CONFIG_PATHS` env (comma-separated) come first
+- explicit args next
+- YAML (`.yaml`/`.yml`) and JSON (`.json`) are parsed; other extensions are ignored with a debug log
+- a late-binding environment source is added last, so env vars override file values
+
+`PrefixServer = "server"` is the conventional cs root for `gateway.ServerConfig`. Consumers can mount additional typed config at their own prefixes.
+
+### `pkg/gateway`
+
+Two fx provider factories — the runner picks one:
+
+- `ProvideServer(opts ...ServerOpt)` — gRPC + grpc-gateway JSON shim on a single port. Uses an internal loopback gRPC listener that the in-process gateway dials.
+- `ProvideGrpcServer(opts ...ServerOpt)` — gRPC only; no HTTP gateway, no aux routes.
+
+Both consume `*ServerConfig` (cs-loaded at `"server"`) plus a `RegistrationFunc`; `ProvideServer` additionally needs `Config` (Title + OpenAPIJSON) and `GatewayFunc`. Both produce `*RunningServer` so downstream `fx.Invoke` can depend on the listener being bound.
+
+mTLS is bound at fx-wiring time via `WithMTLS(MTLSMode)`:
+- `MTLSDisabled` (default) — no client-cert verification.
+- `MTLSFromConfig` — runtime `ServerConfig.MTLS` decides.
+- `MTLSAlways` — always required; panics at startup if `TLS` or `TLSCAPath` is missing.
+
+When `ServerConfig.TLS` is true, `ProvideServer` serves HTTPS (HTTP/2 ALPN auto-negotiated); when false it uses h2c (HTTP/2 cleartext) so gRPC still works.
+
+### `pkg/service`
+
+Currently empty — reserved for future runtime helpers shared across services.
+
 ## Available libraries for codegen
 
 - `github.com/activatedio/protogen` — primary; produces `.proto`. Surface: `proto.NewFile`, `proto.NewMessage`, `proto.NewField`, `proto.NewService`, `proto.NewMethod`, `proto.NewImport`, `proto.NewOption`, plus `tfl` for HTTP option message-values.
@@ -111,9 +158,12 @@ When adding new op families or custom methods, follow these conventions unless t
 
 ## Tests
 
-- Generator tests are golden-string: build a `proto.Service`/`proto.File`, render to a buffer, compare to an expected string literal (see `genlib/grpc/crud/crud_test.go`).
-- When changing generated output, update the golden strings deliberately — they ARE the spec for downstream consumers.
+- **Generator tests** are golden-string: build a `proto.Service`/`proto.File`, render to a buffer, compare to an expected string literal (see `genlib/grpc/crud/crud_test.go`). When changing generated output, update the golden strings deliberately — they ARE the spec for downstream consumers.
 - The escape-hatch test in `crud_test.go` uses `assert.Contains` rather than full golden strings so the test stays robust against unrelated formatting drift.
+- **Runtime tests** in `pkg/config` and `pkg/gateway` are conventional unit + smoke tests:
+  - `pkg/config/config_test.go` round-trips YAML/JSON files and env overrides through `cs`.
+  - `pkg/gateway/gateway_internal_test.go` covers `Addr()`, `resolveMTLS` modes (including panic paths for `MTLSAlways`), and `buildServerTLS` (with self-signed PEMs generated in `t.TempDir()`).
+  - `pkg/gateway/gateway_test.go` spins up `ProvideServer` / `ProvideGrpcServer` via `fxtest.New` on `127.0.0.1:0` and hits `/health` and the gRPC health service. The HTTP smoke tests retry briefly to absorb the goroutine-startup race between `OnStart` returning and the listener calling `Accept`.
 - Run `go test ./...` from the repo root.
 
 ## Deterministic regeneration
