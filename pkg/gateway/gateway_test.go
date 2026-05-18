@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -103,6 +104,143 @@ func TestProvideGrpcServer_HealthCheck(t *testing.T) {
 	resp, err := hc.Check(ctx, &healthpb.HealthCheckRequest{})
 	require.NoError(t, err)
 	assert.Equal(t, healthpb.HealthCheckResponse_SERVING, resp.Status)
+}
+
+func TestProvideServer_HTTPMiddlewareRuns(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var rs *gateway.RunningServer
+	opts := append(providers(cfg),
+		fx.Provide(func() []func(http.Handler) http.Handler {
+			return []func(http.Handler) http.Handler{
+				func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						w.Header().Set("X-Outer", "1")
+						next.ServeHTTP(w, r)
+					})
+				},
+				func(next http.Handler) http.Handler {
+					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+						w.Header().Set("X-Inner", "1")
+						next.ServeHTTP(w, r)
+					})
+				},
+			}
+		}),
+		gateway.ProvideServer(),
+		fx.Populate(&rs),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	resp := getWithRetry(t, fmt.Sprintf("http://127.0.0.1:%d/health", rs.Port))
+	defer resp.Body.Close()
+	assert.Equal(t, "1", resp.Header.Get("X-Outer"))
+	assert.Equal(t, "1", resp.Header.Get("X-Inner"))
+}
+
+func TestProvideServer_UnaryInterceptorRuns(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var calls atomic.Int32
+	var rs *gateway.RunningServer
+	opts := append(providers(cfg),
+		fx.Provide(func() []grpc.UnaryServerInterceptor {
+			return []grpc.UnaryServerInterceptor{
+				func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+					calls.Add(1)
+					return handler(ctx, req)
+				},
+			}
+		}),
+		gateway.ProvideServer(),
+		fx.Populate(&rs),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	conn, err := grpc.NewClient(fmt.Sprintf("127.0.0.1:%d", rs.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_, err = healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	require.NoError(t, err)
+	assert.Equal(t, int32(1), calls.Load())
+}
+
+func TestProvideGrpcServer_UnaryInterceptorRuns(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var calls atomic.Int32
+	var rs *gateway.RunningServer
+	app := fxtest.New(t,
+		fx.Supply(cfg),
+		fx.Provide(
+			func() gateway.RegistrationFunc { return func(_ *grpc.Server) {} },
+			func() []grpc.UnaryServerInterceptor {
+				return []grpc.UnaryServerInterceptor{
+					func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+						calls.Add(1)
+						return handler(ctx, req)
+					},
+				}
+			},
+		),
+		gateway.ProvideGrpcServer(),
+		fx.Populate(&rs),
+	)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	conn, err := grpc.NewClient(fmt.Sprintf("127.0.0.1:%d", rs.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_, err = healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	require.NoError(t, err)
+	assert.Equal(t, int32(1), calls.Load())
+}
+
+func TestProvideServer_UnaryInterceptorChainOrder(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var order []string
+	mark := func(name string) grpc.UnaryServerInterceptor {
+		return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+			order = append(order, name+":pre")
+			resp, err := handler(ctx, req)
+			order = append(order, name+":post")
+			return resp, err
+		}
+	}
+
+	var rs *gateway.RunningServer
+	opts := append(providers(cfg),
+		fx.Provide(func() []grpc.UnaryServerInterceptor {
+			return []grpc.UnaryServerInterceptor{mark("outer"), mark("inner")}
+		}),
+		gateway.ProvideServer(),
+		fx.Populate(&rs),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	conn, err := grpc.NewClient(fmt.Sprintf("127.0.0.1:%d", rs.Port), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	require.NoError(t, err)
+	defer conn.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	_, err = healthpb.NewHealthClient(conn).Check(ctx, &healthpb.HealthCheckRequest{})
+	require.NoError(t, err)
+	assert.Equal(t, []string{"outer:pre", "inner:pre", "inner:post", "outer:post"}, order)
 }
 
 // getWithRetry retries the GET briefly to absorb the listener

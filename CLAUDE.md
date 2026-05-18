@@ -138,6 +138,14 @@ Two fx provider factories — the runner picks one:
 
 Both consume `*ServerConfig` (cs-loaded at `"server"`) plus a `RegistrationFunc`; `ProvideServer` additionally needs `Config` (Title + OpenAPIJSON) and `GatewayFunc`. Both produce `*RunningServer` so downstream `fx.Invoke` can depend on the listener being bound.
 
+**Interceptors and HTTP middleware.** Both `Params` and `GrpcParams` accept optional, chain-ordered slices the consumer provides via plain `fx.Provide`:
+
+- `UnaryInterceptors []grpc.UnaryServerInterceptor` — fed to `grpc.ChainUnaryInterceptor`.
+- `StreamInterceptors []grpc.StreamServerInterceptor` — fed to `grpc.ChainStreamInterceptor`.
+- `HTTPMiddleware []func(http.Handler) http.Handler` — wraps the public dispatch handler (gateway mode only).
+
+Order is "first is outermost." All three are `optional:"true"` so omitting them entirely leaves the empty-default behavior intact. Apiinfra deliberately provides no logging/error/transaction defaults — the consumer assembles its own chain.
+
 mTLS is bound at fx-wiring time via `WithMTLS(MTLSMode)`:
 - `MTLSFromConfig` (default — zero value) — runtime `ServerConfig.MTLS` decides. A runner that omits `WithMTLS` gets this.
 - `MTLSDisabled` — never verify client certs, regardless of runtime config.

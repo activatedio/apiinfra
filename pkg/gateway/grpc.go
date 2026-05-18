@@ -15,10 +15,17 @@ import (
 // GrpcParams holds fx-injected dependencies for the gRPC-only
 // listener. GatewayFunc and gateway-only Config are intentionally
 // absent; the runner that picks this mode does not need them.
+//
+// UnaryInterceptors and StreamInterceptors are optional: a
+// consumer that wants interceptors provides a single fx.Provide
+// returning the chain-ordered slice. Empty slices behave as if
+// the field were absent. First element is outermost.
 type GrpcParams struct {
 	fx.In
-	Server       *ServerConfig
-	Registration RegistrationFunc
+	Server             *ServerConfig
+	Registration       RegistrationFunc
+	UnaryInterceptors  []grpc.UnaryServerInterceptor  `optional:"true"`
+	StreamInterceptors []grpc.StreamServerInterceptor `optional:"true"`
 }
 
 // ProvideGrpcServer returns an fx.Option that wires a gRPC-only
@@ -43,7 +50,10 @@ func newGrpcServer(lc fx.Lifecycle, params GrpcParams, o serverOpts) *RunningSer
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
 
-	var grpcOpts []grpc.ServerOption
+	grpcOpts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(params.UnaryInterceptors...),
+		grpc.ChainStreamInterceptor(params.StreamInterceptors...),
+	}
 	if params.Server.TLS {
 		creds, err := serverCreds(params.Server, wantMTLS)
 		if err != nil {

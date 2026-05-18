@@ -120,12 +120,26 @@ func WithMTLS(mode MTLSMode) ServerOpt {
 }
 
 // Params holds fx-injected dependencies for the gateway listener.
+//
+// UnaryInterceptors, StreamInterceptors, and HTTPMiddleware are
+// optional: a consumer that wants interceptors provides a single
+// fx.Provide returning the chain-ordered slice. Apiinfra is
+// deliberately opinion-free here — no logging/error/transaction
+// defaults are injected. Empty slices behave as if the field were
+// absent.
+//
+// Interceptor order is "first is outermost" — i.e. the first
+// element runs before the next on the way in and after it on the
+// way out. Same convention for HTTPMiddleware.
 type Params struct {
 	fx.In
-	Server       *ServerConfig
-	Config       Config
-	Registration RegistrationFunc
-	Gateway      GatewayFunc
+	Server             *ServerConfig
+	Config             Config
+	Registration       RegistrationFunc
+	Gateway            GatewayFunc
+	UnaryInterceptors  []grpc.UnaryServerInterceptor     `optional:"true"`
+	StreamInterceptors []grpc.StreamServerInterceptor    `optional:"true"`
+	HTTPMiddleware     []func(http.Handler) http.Handler `optional:"true"`
 }
 
 // RunningServer is what downstream fx invokes depend on so they
@@ -162,7 +176,10 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 	}
 	loopbackPort := loopback.Addr().(*net.TCPAddr).Port
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(params.UnaryInterceptors...),
+		grpc.ChainStreamInterceptor(params.StreamInterceptors...),
+	)
 	grpc_health_v1.RegisterHealthServer(grpcServer, &healthServer{})
 	params.Registration(grpcServer)
 
@@ -182,7 +199,7 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 
 			attachAuxRoutes(mux, params.Config)
 
-			dispatch := grpcDispatch(grpcServer, mux)
+			dispatch := composeMiddleware(grpcDispatch(grpcServer, mux), params.HTTPMiddleware)
 
 			go func() {
 				log.Info().Str("addr", loopback.Addr().String()).Msg("starting internal gRPC loopback")
@@ -220,6 +237,15 @@ func servePublic(listener net.Listener, dispatch http.Handler, cfg *ServerConfig
 	}
 	srv := &http.Server{Handler: dispatch, TLSConfig: tlsCfg}
 	return srv.ServeTLS(listener, "", "")
+}
+
+// composeMiddleware folds the slice into a single http.Handler with
+// middleware[0] outermost. An empty/nil slice is a no-op.
+func composeMiddleware(h http.Handler, middleware []func(http.Handler) http.Handler) http.Handler {
+	for i := len(middleware) - 1; i >= 0; i-- {
+		h = middleware[i](h)
+	}
+	return h
 }
 
 // resolveMTLS turns the compile-time mode + runtime config into a
