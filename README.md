@@ -31,7 +31,7 @@ Imported by the consumer's runtime binary. Kept intentionally small so consumers
   - `ServerConfig` — cs-loaded listener config (host/port/TLS/mTLS/cert paths) at the conventional cs prefix `"server"`.
   - `ProvideServer(opts...) fx.Option` — gRPC + JSON gateway on a single port.
   - `ProvideGrpcServer(opts...) fx.Option` — gRPC only (no HTTP gateway).
-  - `WithMTLS(MTLSMode)` — compile-time mTLS mode (Disabled, FromConfig, Always).
+  - `WithMTLS(MTLSMode)` — compile-time mTLS mode. Default (zero value) is `MTLSFromConfig`; choices are `MTLSFromConfig`, `MTLSDisabled`, `MTLSAlways`.
 - `pkg/service` — placeholder for future runtime helpers shared across services.
 
 A consumer project keeps domain logic, generation entry points, FX index modules, and `main` packages in its own tree; everything cross-cutting and non-domain-specific belongs here.

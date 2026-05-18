@@ -70,6 +70,13 @@ func TestResolveMTLS_FromConfig(t *testing.T) {
 	assert.False(t, resolveMTLS(MTLSFromConfig, &ServerConfig{MTLS: false}))
 }
 
+// The zero value of MTLSMode is MTLSFromConfig so that
+// ProvideServer() with no WithMTLS option is runtime-driven.
+func TestMTLSMode_ZeroValueIsFromConfig(t *testing.T) {
+	var zero MTLSMode
+	assert.Equal(t, MTLSFromConfig, zero)
+}
+
 func TestResolveMTLS_Always_OK(t *testing.T) {
 	assert.True(t, resolveMTLS(MTLSAlways, &ServerConfig{TLS: true, TLSCAPath: "ca.pem"}))
 }

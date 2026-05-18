@@ -9,8 +9,8 @@
 // Both accept ServerOpts; WithMTLS configures whether the listener
 // verifies client certificates. mTLS has three compile-time modes:
 //
-//   - MTLSDisabled   — never check client certs (default)
-//   - MTLSFromConfig — runtime ServerConfig.MTLS gates verification
+//   - MTLSFromConfig — runtime ServerConfig.MTLS gates verification (default)
+//   - MTLSDisabled   — never check client certs
 //   - MTLSAlways     — always on; panics if not configured at start
 //
 // ServerConfig is cs-loaded by the consumer (see pkg/config).
@@ -50,8 +50,8 @@ type ServerConfig struct {
 	// by the in-process gateway dial is always cleartext.
 	TLS bool
 	// MTLS is only consulted when the listener was built with
-	// WithMTLS(MTLSFromConfig). Has no effect under MTLSDisabled
-	// or MTLSAlways.
+	// WithMTLS(MTLSFromConfig) (the default). Has no effect under
+	// MTLSDisabled or MTLSAlways.
 	MTLS bool
 	// TLSCertPath is the server certificate (PEM).
 	TLSCertPath string `key:"tlsCertPath"`
@@ -95,11 +95,13 @@ type GatewayFunc func(ctx context.Context, mux *runtime.ServeMux, target string,
 type MTLSMode int
 
 const (
-	// MTLSDisabled never verifies client certs. Default.
-	MTLSDisabled MTLSMode = iota
 	// MTLSFromConfig consults ServerConfig.MTLS at startup; if
-	// false, behaves like MTLSDisabled.
-	MTLSFromConfig
+	// false, behaves like MTLSDisabled. Zero-value default, so a
+	// runner that calls ProvideServer() with no options gets
+	// runtime-config-driven mTLS.
+	MTLSFromConfig MTLSMode = iota
+	// MTLSDisabled never verifies client certs.
+	MTLSDisabled
 	// MTLSAlways always verifies client certs; panics at startup
 	// if TLS or TLSCAPath isn't configured.
 	MTLSAlways

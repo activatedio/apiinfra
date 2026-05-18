@@ -139,8 +139,8 @@ Two fx provider factories — the runner picks one:
 Both consume `*ServerConfig` (cs-loaded at `"server"`) plus a `RegistrationFunc`; `ProvideServer` additionally needs `Config` (Title + OpenAPIJSON) and `GatewayFunc`. Both produce `*RunningServer` so downstream `fx.Invoke` can depend on the listener being bound.
 
 mTLS is bound at fx-wiring time via `WithMTLS(MTLSMode)`:
-- `MTLSDisabled` (default) — no client-cert verification.
-- `MTLSFromConfig` — runtime `ServerConfig.MTLS` decides.
+- `MTLSFromConfig` (default — zero value) — runtime `ServerConfig.MTLS` decides. A runner that omits `WithMTLS` gets this.
+- `MTLSDisabled` — never verify client certs, regardless of runtime config.
 - `MTLSAlways` — always required; panics at startup if `TLS` or `TLSCAPath` is missing.
 
 When `ServerConfig.TLS` is true, `ProvideServer` serves HTTPS (HTTP/2 ALPN auto-negotiated); when false it uses h2c (HTTP/2 cleartext) so gRPC still works.
