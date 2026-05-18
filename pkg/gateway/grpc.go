@@ -13,7 +13,7 @@ import (
 )
 
 // GrpcParams holds fx-injected dependencies for the gRPC-only
-// listener. GatewayFunc and gateway-only Config are intentionally
+// listener. The gateway Func and gateway-only Config are intentionally
 // absent; the runner that picks this mode does not need them.
 //
 // UnaryInterceptors and StreamInterceptors are optional: a
@@ -44,7 +44,8 @@ func ProvideGrpcServer(opts ...ServerOpt) fx.Option {
 func newGrpcServer(lc fx.Lifecycle, params GrpcParams, o serverOpts) *RunningServer {
 	wantMTLS := resolveMTLS(o.mtls, params.Server)
 
-	listener, err := net.Listen("tcp", params.Server.Addr())
+	var listenCfg net.ListenConfig
+	listener, err := listenCfg.Listen(context.Background(), "tcp", params.Server.Addr())
 	if err != nil {
 		panic(fmt.Errorf("gateway: bind %s: %w", params.Server.Addr(), err))
 	}

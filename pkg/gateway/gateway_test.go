@@ -29,7 +29,7 @@ func providers(cfg *gateway.ServerConfig) []fx.Option {
 			func() gateway.RegistrationFunc {
 				return func(_ *grpc.Server) {}
 			},
-			func() gateway.GatewayFunc {
+			func() gateway.Func {
 				return func(_ context.Context, _ *runtime.ServeMux, _ string, _ []grpc.DialOption) error {
 					return nil
 				}
@@ -103,7 +103,7 @@ func TestProvideGrpcServer_HealthCheck(t *testing.T) {
 	hc := healthpb.NewHealthClient(conn)
 	resp, err := hc.Check(ctx, &healthpb.HealthCheckRequest{})
 	require.NoError(t, err)
-	assert.Equal(t, healthpb.HealthCheckResponse_SERVING, resp.Status)
+	assert.Equal(t, healthpb.HealthCheckResponse_SERVING, resp.GetStatus())
 }
 
 func TestProvideServer_HTTPMiddlewareRuns(t *testing.T) {
@@ -251,7 +251,9 @@ func getWithRetry(t *testing.T, url string) *http.Response {
 	deadline := time.Now().Add(2 * time.Second)
 	var lastErr error
 	for time.Now().Before(deadline) {
-		resp, err := http.Get(url) //nolint:gosec // test localhost URL
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url, nil)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
 		if err == nil {
 			return resp
 		}

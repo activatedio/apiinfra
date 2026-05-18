@@ -46,9 +46,9 @@ type Resource struct {
 	Ops        Ops
 }
 
-func (r Resource) name() string         { return r.Message.GetName() }
-func (r Resource) apiName() string      { return strcase.ToSnake(r.name()) }
-func (r Resource) pluralName() string   { return pl.Plural(r.apiName()) }
+func (r Resource) name() string       { return r.Message.GetName() }
+func (r Resource) apiName() string    { return strcase.ToSnake(r.name()) }
+func (r Resource) pluralName() string { return pl.Plural(r.apiName()) }
 func (r Resource) qualifiedName() string {
 	if pkg := r.Message.GetPackageName(); pkg != "" {
 		return pkg + "." + r.name()

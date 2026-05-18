@@ -26,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/rs/zerolog/log"
@@ -85,10 +86,14 @@ type Config struct {
 // provides one.
 type RegistrationFunc func(s *grpc.Server)
 
-// GatewayFunc registers a service's grpc-gateway handler. Only
-// consulted by the gateway listener; the gRPC-only listener
-// ignores it.
-type GatewayFunc func(ctx context.Context, mux *runtime.ServeMux, target string, opts []grpc.DialOption) error
+// Func registers a service's grpc-gateway handler. Only consulted
+// by the gateway listener; the gRPC-only listener ignores it.
+type Func func(ctx context.Context, mux *runtime.ServeMux, target string, opts []grpc.DialOption) error
+
+// readHeaderTimeout protects the public HTTP listener from
+// Slowloris-style attacks by capping how long clients can take to
+// send their request headers.
+const readHeaderTimeout = 30 * time.Second
 
 // MTLSMode picks how (or whether) the listener verifies client
 // certs. Bound at fx-wiring time via WithMTLS.
@@ -136,7 +141,7 @@ type Params struct {
 	Server             *ServerConfig
 	Config             Config
 	Registration       RegistrationFunc
-	Gateway            GatewayFunc
+	Gateway            Func
 	UnaryInterceptors  []grpc.UnaryServerInterceptor     `optional:"true"`
 	StreamInterceptors []grpc.StreamServerInterceptor    `optional:"true"`
 	HTTPMiddleware     []func(http.Handler) http.Handler `optional:"true"`
@@ -164,13 +169,14 @@ func ProvideServer(opts ...ServerOpt) fx.Option {
 func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 	wantMTLS := resolveMTLS(o.mtls, params.Server)
 
-	listener, err := net.Listen("tcp", params.Server.Addr())
+	var listenCfg net.ListenConfig
+	listener, err := listenCfg.Listen(context.Background(), "tcp", params.Server.Addr())
 	if err != nil {
 		panic(fmt.Errorf("gateway: bind %s: %w", params.Server.Addr(), err))
 	}
 	publicPort := listener.Addr().(*net.TCPAddr).Port
 
-	loopback, err := net.Listen("tcp", "127.0.0.1:0")
+	loopback, err := listenCfg.Listen(context.Background(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		panic(fmt.Errorf("gateway: bind loopback: %w", err))
 	}
@@ -229,13 +235,21 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 // without TLS.
 func servePublic(listener net.Listener, dispatch http.Handler, cfg *ServerConfig, mtls bool) error {
 	if !cfg.TLS {
-		return http.Serve(listener, h2c.NewHandler(dispatch, &http2.Server{}))
+		srv := &http.Server{
+			Handler:           h2c.NewHandler(dispatch, &http2.Server{}),
+			ReadHeaderTimeout: readHeaderTimeout,
+		}
+		return srv.Serve(listener)
 	}
 	tlsCfg, err := buildServerTLS(cfg, mtls)
 	if err != nil {
 		return fmt.Errorf("gateway: build tls: %w", err)
 	}
-	srv := &http.Server{Handler: dispatch, TLSConfig: tlsCfg}
+	srv := &http.Server{
+		Handler:           dispatch,
+		TLSConfig:         tlsCfg,
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
 	return srv.ServeTLS(listener, "", "")
 }
 
