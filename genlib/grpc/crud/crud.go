@@ -40,6 +40,10 @@ const (
 // Resource describes a CRUD-managed resource: the proto message that
 // represents it, any parent path it lives under, and an optional Ops bitmask.
 // When Ops is zero, All treats it as OpAll.
+//
+// CRUD output is AIP-canonical: List methods/messages take the plural
+// form (AIP-132), Update emits a named body matching the resource's
+// snake-case singular (AIP-134), Create and Patch emit body: "*".
 type Resource struct {
 	Message    proto.Message
 	ParentPath string
@@ -162,10 +166,12 @@ func applyList(r Resource, t grpc.Target) {
 	t.ServiceImports.AddImports(proto.NewImport(annotationsImport))
 	t.Messages.AddImports(proto.NewImport(fieldMaskImport))
 
+	methodNoun := r.listMethodNoun()
+
 	t.Service.AddMethods(
-		proto.NewMethod(fmt.Sprintf("List%s", r.name()), proto.MethodParams{
-			RequestName:  fmt.Sprintf("List%sRequest", r.name()),
-			ResponseName: fmt.Sprintf("List%sResponse", r.name()),
+		proto.NewMethod(fmt.Sprintf("List%s", methodNoun), proto.MethodParams{
+			RequestName:  fmt.Sprintf("List%sRequest", methodNoun),
+			ResponseName: fmt.Sprintf("List%sResponse", methodNoun),
 		}).AddOptions(
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(
 				tfl.NewMessageValue().AddFields(
@@ -177,6 +183,13 @@ func applyList(r Resource, t grpc.Target) {
 
 	req, resp := NewListRequestResponse(r)
 	t.Messages.AddMessages(req, resp)
+}
+
+// listMethodNoun returns the noun used in List<Noun>{,Request,Response}
+// — the AIP-132 canonical plural ("The remainder of the method name
+// SHOULD be the plural of the resource's noun").
+func (r Resource) listMethodNoun() string {
+	return pl.Plural(r.name())
 }
 
 func applyCreate(r Resource, t grpc.Target) {
@@ -210,7 +223,9 @@ func applyUpdate(r Resource, t grpc.Target) {
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(
 				tfl.NewMessageValue().AddFields(
 					tfl.NewStringField("put", r.nameURL(t.APIBasePath)),
-					tfl.NewStringField("body", "*"),
+					// AIP-134: the body field MUST be named after the
+					// resource type (snake-case singular).
+					tfl.NewStringField("body", r.apiName()),
 				),
 			)),
 		),
@@ -276,10 +291,13 @@ func NewGetRequest(r Resource) proto.Message {
 	)
 }
 
-// NewListRequestResponse returns the List<Resource>Request and List<Resource>Response messages.
-// The response uses the plural resource name as its list field (AIP-132).
+// NewListRequestResponse returns the List<Noun>Request and List<Noun>Response messages.
+// The noun is the singular resource name unless Resource.ListMethodPlural
+// is set, in which case it is the AIP-132 canonical plural. The
+// response's repeated field always uses the snake-plural resource name.
 func NewListRequestResponse(r Resource) (proto.Message, proto.Message) {
-	req := proto.NewMessage(fmt.Sprintf("List%sRequest", r.name())).AddFields(
+	noun := r.listMethodNoun()
+	req := proto.NewMessage(fmt.Sprintf("List%sRequest", noun)).AddFields(
 		proto.NewField("parent", proto.FieldParams{
 			FieldType: "string",
 			Number:    1,
@@ -305,7 +323,7 @@ func NewListRequestResponse(r Resource) (proto.Message, proto.Message) {
 			Number:    6,
 		}),
 	)
-	resp := proto.NewMessage(fmt.Sprintf("List%sResponse", r.name())).AddFields(
+	resp := proto.NewMessage(fmt.Sprintf("List%sResponse", noun)).AddFields(
 		proto.NewField(r.pluralName(), proto.FieldParams{
 			FieldType: r.qualifiedName(),
 			Repeated:  true,

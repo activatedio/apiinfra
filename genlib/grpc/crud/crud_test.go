@@ -38,7 +38,7 @@ func TestAll(t *testing.T) {
       get: "/{name=units/*}"
     };
   }
-  rpc ListUnit (ListUnitRequest) returns (ListUnitResponse) {
+  rpc ListUnits (ListUnitsRequest) returns (ListUnitsResponse) {
     option (google.api.http) = {
       get: "/units"
     };
@@ -52,7 +52,7 @@ func TestAll(t *testing.T) {
   rpc UpdateUnit (UpdateUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       put: "/{name=units/*}"
-      body: "*"
+      body: "unit"
     };
   }
   rpc PatchUnit (PatchUnitRequest) returns (unit.api.Unit) {
@@ -88,7 +88,7 @@ message GetUnitRequest {
   google.protobuf.FieldMask read_mask = 2;
 }
 
-message ListUnitRequest {
+message ListUnitsRequest {
   string parent = 1;
   int32 page_size = 2;
   string page_token = 3;
@@ -97,7 +97,7 @@ message ListUnitRequest {
   google.protobuf.FieldMask read_mask = 6;
 }
 
-message ListUnitResponse {
+message ListUnitsResponse {
   repeated unit.api.Unit units = 1;
   string next_page_token = 2;
 }
@@ -139,7 +139,7 @@ message DeleteUnitRequest {
       get: "/api/v2/{name=tenants/*/modified_units/*}"
     };
   }
-  rpc ListModifiedUnit (ListModifiedUnitRequest) returns (ListModifiedUnitResponse) {
+  rpc ListModifiedUnits (ListModifiedUnitsRequest) returns (ListModifiedUnitsResponse) {
     option (google.api.http) = {
       get: "/api/v2/{parent=tenants/*}/modified_units"
     };
@@ -153,7 +153,7 @@ message DeleteUnitRequest {
   rpc UpdateModifiedUnit (UpdateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       put: "/api/v2/{name=tenants/*/modified_units/*}"
-      body: "*"
+      body: "modified_unit"
     };
   }
   rpc PatchModifiedUnit (PatchModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
@@ -189,7 +189,7 @@ message GetModifiedUnitRequest {
   google.protobuf.FieldMask read_mask = 2;
 }
 
-message ListModifiedUnitRequest {
+message ListModifiedUnitsRequest {
   string parent = 1;
   int32 page_size = 2;
   string page_token = 3;
@@ -198,7 +198,7 @@ message ListModifiedUnitRequest {
   google.protobuf.FieldMask read_mask = 6;
 }
 
-message ListModifiedUnitResponse {
+message ListModifiedUnitsResponse {
   repeated modified_unit.api.ModifiedUnit modified_units = 1;
   string next_page_token = 2;
 }
@@ -239,7 +239,7 @@ message DeleteModifiedUnitRequest {
       get: "/{name=units/*}"
     };
   }
-  rpc ListUnit (ListUnitRequest) returns (ListUnitResponse) {
+  rpc ListUnits (ListUnitsRequest) returns (ListUnitsResponse) {
     option (google.api.http) = {
       get: "/units"
     };
@@ -271,7 +271,7 @@ message GetUnitRequest {
   google.protobuf.FieldMask read_mask = 2;
 }
 
-message ListUnitRequest {
+message ListUnitsRequest {
   string parent = 1;
   int32 page_size = 2;
   string page_token = 3;
@@ -280,7 +280,7 @@ message ListUnitRequest {
   google.protobuf.FieldMask read_mask = 6;
 }
 
-message ListUnitResponse {
+message ListUnitsResponse {
   repeated unit.api.Unit units = 1;
   string next_page_token = 2;
 }
