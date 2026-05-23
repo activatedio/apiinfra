@@ -136,35 +136,35 @@ message DeleteUnitRequest {
 			expectedService: `service ModifiedUnitService {
   rpc GetModifiedUnit (GetModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
-      get: "/api/v2/{name=tenants/*/modified_units/*}"
+      get: "/api/v2/{name=tenants/*/modified-units/*}"
     };
   }
   rpc ListModifiedUnits (ListModifiedUnitsRequest) returns (ListModifiedUnitsResponse) {
     option (google.api.http) = {
-      get: "/api/v2/{parent=tenants/*}/modified_units"
+      get: "/api/v2/{parent=tenants/*}/modified-units"
     };
   }
   rpc CreateModifiedUnit (CreateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
-      post: "/api/v2/{parent=tenants/*}/modified_units"
+      post: "/api/v2/{parent=tenants/*}/modified-units"
       body: "*"
     };
   }
   rpc UpdateModifiedUnit (UpdateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
-      put: "/api/v2/{name=tenants/*/modified_units/*}"
+      put: "/api/v2/{name=tenants/*/modified-units/*}"
       body: "modified_unit"
     };
   }
   rpc PatchModifiedUnit (PatchModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
-      patch: "/api/v2/{name=tenants/*/modified_units/*}"
+      patch: "/api/v2/{name=tenants/*/modified-units/*}"
       body: "*"
     };
   }
   rpc DeleteModifiedUnit (DeleteModifiedUnitRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      delete: "/api/v2/{name=tenants/*/modified_units/*}"
+      delete: "/api/v2/{name=tenants/*/modified-units/*}"
     };
   }
 }

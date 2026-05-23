@@ -53,6 +53,11 @@ type Resource struct {
 func (r Resource) name() string       { return r.Message.GetName() }
 func (r Resource) apiName() string    { return strcase.ToSnake(r.name()) }
 func (r Resource) pluralName() string { return pl.Plural(r.apiName()) }
+
+// urlCollectionSlug is the URL form of the resource's plural — kebab-case,
+// e.g. "tenant-memberships". URL path segments are kebab-case throughout
+// kit; proto field names (returned by pluralName) stay snake-case.
+func (r Resource) urlCollectionSlug() string { return strcase.ToKebab(r.pluralName()) }
 func (r Resource) qualifiedName() string {
 	if pkg := r.Message.GetPackageName(); pkg != "" {
 		return pkg + "." + r.name()
@@ -70,7 +75,7 @@ func (r Resource) nameURL(apiBase string) string {
 	if npp != "" {
 		npp += "/"
 	}
-	return fmt.Sprintf("%s/{name=%s%s/*}", apiBase, npp, r.pluralName())
+	return fmt.Sprintf("%s/{name=%s%s/*}", apiBase, npp, r.urlCollectionSlug())
 }
 
 // collectionURL builds the collection URL: /<base>/<plural> with no parent,
@@ -78,9 +83,9 @@ func (r Resource) nameURL(apiBase string) string {
 func (r Resource) collectionURL(apiBase string) string {
 	npp := r.normalizedParentPath()
 	if npp == "" {
-		return fmt.Sprintf("%s/%s", apiBase, r.pluralName())
+		return fmt.Sprintf("%s/%s", apiBase, r.urlCollectionSlug())
 	}
-	return fmt.Sprintf("%s/{parent=%s}/%s", apiBase, npp, r.pluralName())
+	return fmt.Sprintf("%s/{parent=%s}/%s", apiBase, npp, r.urlCollectionSlug())
 }
 
 // All returns an Operation that emits the CRUD methods selected by r.Ops.
