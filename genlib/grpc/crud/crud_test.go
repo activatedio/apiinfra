@@ -46,7 +46,7 @@ func TestAll(t *testing.T) {
   rpc CreateUnit (CreateUnitRequest) returns (unit.api.Unit) {
     option (google.api.http) = {
       post: "/units"
-      body: "*"
+      body: "unit"
     };
   }
   rpc UpdateUnit (UpdateUnitRequest) returns (unit.api.Unit) {
@@ -147,7 +147,7 @@ message DeleteUnitRequest {
   rpc CreateModifiedUnit (CreateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {
     option (google.api.http) = {
       post: "/api/v2/{parent=tenants/*}/modified-units"
-      body: "*"
+      body: "modified_unit"
     };
   }
   rpc UpdateModifiedUnit (UpdateModifiedUnitRequest) returns (modified_unit.api.ModifiedUnit) {

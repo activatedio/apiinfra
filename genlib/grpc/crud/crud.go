@@ -42,8 +42,10 @@ const (
 // When Ops is zero, All treats it as OpAll.
 //
 // CRUD output is AIP-canonical: List methods/messages take the plural
-// form (AIP-132), Update emits a named body matching the resource's
-// snake-case singular (AIP-134), Create and Patch emit body: "*".
+// form (AIP-132), Create + Update emit a named body matching the
+// resource's snake-case singular (AIP-133 / AIP-134), Patch emits
+// body: "*" (update_mask lives in the envelope, so Patch can't use
+// the named-body form).
 type Resource struct {
 	Message    proto.Message
 	ParentPath string
@@ -208,7 +210,11 @@ func applyCreate(r Resource, t grpc.Target) {
 			proto.NewOption("google.api.http", proto.NewMessageValueConstant(
 				tfl.NewMessageValue().AddFields(
 					tfl.NewStringField("post", r.collectionURL(t.APIBasePath)),
-					tfl.NewStringField("body", "*"),
+					// AIP-133: the body field MUST be named after the
+					// resource (snake-case singular). The gateway then
+					// unmarshals the JSON body directly into the request's
+					// resource field; `parent` comes from the URL capture.
+					tfl.NewStringField("body", r.apiName()),
 				),
 			)),
 		),
