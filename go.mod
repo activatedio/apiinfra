@@ -5,7 +5,7 @@ go 1.24.6
 tool github.com/bufbuild/buf/cmd/buf
 
 require (
-	github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646
+	github.com/activatedio/protogen v0.2.0
 	github.com/dave/jennifer v1.7.1
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3
