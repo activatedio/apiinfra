@@ -5,12 +5,16 @@ go 1.24.6
 tool github.com/bufbuild/buf/cmd/buf
 
 require (
+	github.com/activatedio/cs v0.4.0
 	github.com/activatedio/protogen v0.2.0
 	github.com/dave/jennifer v1.7.1
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3
 	github.com/iancoleman/strcase v0.3.0
+	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
+	go.uber.org/fx v1.24.0
+	golang.org/x/net v0.46.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20251007200510-49b9836ed3ff
 	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.10
@@ -36,7 +40,6 @@ require (
 	connectrpc.com/otelconnect v0.8.0 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/activatedio/cs v0.4.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/bufbuild/buf v1.59.0 // indirect
 	github.com/bufbuild/protocompile v0.14.2-0.20251017200126-6da99d83224e // indirect
@@ -81,7 +84,6 @@ require (
 	github.com/quic-go/quic-go v0.55.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rs/cors v1.11.1 // indirect
-	github.com/rs/zerolog v1.34.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/segmentio/encoding v0.5.3 // indirect
@@ -103,13 +105,11 @@ require (
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/otel/trace v1.38.0 // indirect
 	go.uber.org/dig v1.19.0 // indirect
-	go.uber.org/fx v1.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/exp v0.0.0-20251009144603-d2f985daa21b // indirect
 	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/term v0.36.0 // indirect
@@ -122,4 +122,3 @@ require (
 
 // TEMPORARY: local protogen for kit-116 (gRPC streaming method support).
 // Drop once protogen tags a release containing the streaming change.
-replace github.com/activatedio/protogen => /Users/ben.tomasini-authwise/git/activatedio/protogen

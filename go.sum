@@ -38,8 +38,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/activatedio/cs v0.4.0 h1:xy0hTLxZ5OUqhpCSEY+6aqfPrMHcKtCe8q9HgI/e4Xg=
 github.com/activatedio/cs v0.4.0/go.mod h1:DfR6dvdLyfsui5uT/E++dy/EhUNzU6BLrPKJRjNHaJ4=
-github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646 h1:0OmGhtwU7tph0fI5uYN1bkBMdfzJpj9xfRGs/+UnpV8=
-github.com/activatedio/protogen v0.1.1-0.20251021014343-61e43e9cc646/go.mod h1:Agwpqyp7KYJ+s+60iaRzMampMZG1ky4aJYC3UxCblTg=
+github.com/activatedio/protogen v0.2.0 h1:ndCzqn9GbxqqdJkxVryM+IEigS4JHzTINi2gd9He/1s=
+github.com/activatedio/protogen v0.2.0/go.mod h1:Agwpqyp7KYJ+s+60iaRzMampMZG1ky4aJYC3UxCblTg=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/bmatcuk/doublestar/v4 v4.9.1 h1:X8jg9rRZmJd4yRy7ZeNDRnM+T3ZfHv15JiBJ/avrEXE=
@@ -87,6 +87,8 @@ github.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4
 github.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
+github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
+github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/gertd/go-pluralize v0.2.1 h1:M3uASbVjMnTsPb0PNqg+E/24Vwigyo/tvyMTtAlLgiA=
 github.com/gertd/go-pluralize v0.2.1/go.mod h1:rbYaKDbsXxmRfr8uygAEKhOWsjyrrqrkHVpZvoOp8zk=
 github.com/go-chi/chi/v5 v5.2.3 h1:WQIt9uxdsAbgIYgid+BpYc+liqQZGMHRaUwp0JUcvdE=
