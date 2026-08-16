@@ -14,6 +14,8 @@ import (
 
 //go:generate go run .
 
+// Proto emission constants: the go_package option name and the example's
+// generated-stub import path.
 const (
 	GoPackageOptionName = "go_package"
 	GoPackage           = "github.com/activatedio/apiinfra/examples/app/pb"
