@@ -119,6 +119,3 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	pluginrpc.com/pluginrpc v0.5.0 // indirect
 )
-
-// TEMPORARY: local protogen for kit-116 (gRPC streaming method support).
-// Drop once protogen tags a release containing the streaming change.
