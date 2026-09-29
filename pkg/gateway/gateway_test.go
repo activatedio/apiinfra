@@ -15,9 +15,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxtest"
+	"google.golang.org/genproto/googleapis/api/httpbody"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/proto"
 )
 
 // providers returns the fx.Options that satisfy Params/GrpcParams
@@ -246,6 +248,62 @@ func TestProvideServer_UnaryInterceptorChainOrder(t *testing.T) {
 // getWithRetry retries the GET briefly to absorb the listener
 // goroutine startup race between fx OnStart returning and the
 // listener calling Accept.
+// forwardOn returns a gateway.Func that serves msg at GET path through the
+// mux's own outbound marshaler, as a generated handler would.
+func forwardOn(path string, msg proto.Message) gateway.Func {
+	return func(_ context.Context, mux *runtime.ServeMux, _ string, _ []grpc.DialOption) error {
+		return mux.HandlePath(http.MethodGet, path, func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+			_, outbound := runtime.MarshalerForRequest(mux, r)
+			runtime.ForwardResponseMessage(r.Context(), mux, outbound, w, r, msg)
+		})
+	}
+}
+
+func TestProvideServer_HTTPBodyServedRaw(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var rs *gateway.RunningServer
+	opts := append(providers(cfg),
+		fx.Decorate(func() gateway.Func {
+			return forwardOn("/v1/blob", &httpbody.HttpBody{ContentType: "image/jpeg", Data: []byte{0xff, 0xd8, 0xff}})
+		}),
+		gateway.ProvideServer(),
+		fx.Populate(&rs),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	resp := getWithRetry(t, fmt.Sprintf("http://127.0.0.1:%d/v1/blob", rs.Port))
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "image/jpeg", resp.Header.Get("Content-Type"))
+	assert.Equal(t, []byte{0xff, 0xd8, 0xff}, body)
+}
+
+func TestProvideServer_MessagesStayJSON(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var rs *gateway.RunningServer
+	opts := append(providers(cfg),
+		fx.Decorate(func() gateway.Func {
+			return forwardOn("/v1/check", &healthpb.HealthCheckResponse{Status: healthpb.HealthCheckResponse_SERVING})
+		}),
+		gateway.ProvideServer(),
+		fx.Populate(&rs),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+	defer app.RequireStop()
+
+	resp := getWithRetry(t, fmt.Sprintf("http://127.0.0.1:%d/v1/check", rs.Port))
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+	assert.JSONEq(t, `{"status":"SERVING"}`, string(body))
+}
+
 func getWithRetry(t *testing.T, url string) *http.Response {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)

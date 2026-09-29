@@ -191,10 +191,15 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
+			// HTTPBodyMarshaler serves a google.api.HttpBody response as the
+			// bytes it carries, with its content type; every other message
+			// goes through the JSON marshaler it wraps.
 			mux := runtime.NewServeMux(
-				runtime.WithMarshalerOption("*", &runtime.JSONPb{
-					MarshalOptions:   protojson.MarshalOptions{UseProtoNames: true},
-					UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
+				runtime.WithMarshalerOption("*", &runtime.HTTPBodyMarshaler{
+					Marshaler: &runtime.JSONPb{
+						MarshalOptions:   protojson.MarshalOptions{UseProtoNames: true},
+						UnmarshalOptions: protojson.UnmarshalOptions{DiscardUnknown: true},
+					},
 				}),
 			)
 			target := fmt.Sprintf("127.0.0.1:%d", loopbackPort)
