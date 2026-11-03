@@ -77,7 +77,10 @@ func (s *ServerConfig) Addr() string {
 type Config struct {
 	// Title is shown on the home page.
 	Title string
-	// OpenAPIJSON is served at /openapi.json.
+	// OpenAPIJSON is served at /openapi.json. The gateway marshals JSON
+	// with proto field names (UseProtoNames), while protoc-gen-openapiv2
+	// documents lowerCamel JSON names by default; generate this document
+	// with json_names_for_fields=false or it will not match the wire.
 	OpenAPIJSON []byte
 }
 
@@ -88,6 +91,9 @@ type RegistrationFunc func(s *grpc.Server)
 
 // Func registers a service's grpc-gateway handler. Only consulted
 // by the gateway listener; the gRPC-only listener ignores it.
+//
+// ctx lives for the life of the app and is cancelled on Stop, so it is
+// safe to hand straight to a generated Register…HandlerFromEndpoint.
 type Func func(ctx context.Context, mux *runtime.ServeMux, target string, opts []grpc.DialOption) error
 
 // readHeaderTimeout protects the public HTTP listener from
@@ -189,8 +195,15 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 	grpc_health_v1.RegisterHealthServer(grpcServer, &healthServer{})
 	params.Registration(grpcServer)
 
+	// The gateway's loopback connection must live as long as the app, not
+	// as long as OnStart: fx cancels the start context when Start returns,
+	// and grpc-gateway's Register…FromEndpoint closes its connection when
+	// the context it was given is done — every REST call after boot then
+	// fails with 499 while gRPC keeps working. Cancelled on Stop.
+	gatewayCtx, cancelGateway := context.WithCancel(context.Background())
+
 	lc.Append(fx.Hook{
-		OnStart: func(ctx context.Context) error {
+		OnStart: func(_ context.Context) error {
 			// HTTPBodyMarshaler serves a google.api.HttpBody response as the
 			// bytes it carries, with its content type; every other message
 			// goes through the JSON marshaler it wraps.
@@ -204,7 +217,8 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 			)
 			target := fmt.Sprintf("127.0.0.1:%d", loopbackPort)
 			dialOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-			if err := params.Gateway(ctx, mux, target, dialOpts); err != nil {
+			if err := params.Gateway(gatewayCtx, mux, target, dialOpts); err != nil {
+				cancelGateway()
 				return fmt.Errorf("gateway register: %w", err)
 			}
 
@@ -227,6 +241,7 @@ func newServer(lc fx.Lifecycle, params Params, o serverOpts) *RunningServer {
 			return nil
 		},
 		OnStop: func(_ context.Context) error {
+			cancelGateway()
 			grpcServer.GracefulStop()
 			return nil
 		},

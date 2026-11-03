@@ -304,6 +304,40 @@ func TestProvideServer_MessagesStayJSON(t *testing.T) {
 	assert.JSONEq(t, `{"status":"SERVING"}`, string(body))
 }
 
+// TestProvideServer_GatewayContextOutlivesStart is the regression test for
+// the gateway being registered with the fx OnStart context. fx cancels that
+// context when Start returns, and grpc-gateway's Register…FromEndpoint
+// closes its loopback connection when its context is done, so every REST
+// call after boot failed with 499 while gRPC kept working. The context a
+// Func is handed must stay live for the life of the app and end on Stop.
+func TestProvideServer_GatewayContextOutlivesStart(t *testing.T) {
+	cfg := &gateway.ServerConfig{Host: "127.0.0.1", Port: 0}
+
+	var got context.Context
+	opts := append(providers(cfg),
+		fx.Decorate(func() gateway.Func {
+			return func(ctx context.Context, _ *runtime.ServeMux, _ string, _ []grpc.DialOption) error {
+				got = ctx
+				return nil
+			}
+		}),
+		gateway.ProvideServer(),
+		fx.Invoke(func(*gateway.RunningServer) {}),
+	)
+	app := fxtest.New(t, opts...)
+	app.RequireStart()
+
+	require.NotNil(t, got)
+	require.NoError(t, got.Err(), "gateway context must outlive OnStart")
+
+	app.RequireStop()
+	select {
+	case <-got.Done():
+	case <-time.After(time.Second):
+		t.Fatal("gateway context must be cancelled on Stop")
+	}
+}
+
 func getWithRetry(t *testing.T, url string) *http.Response {
 	t.Helper()
 	deadline := time.Now().Add(2 * time.Second)
