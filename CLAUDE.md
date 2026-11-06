@@ -20,7 +20,8 @@ genlib/             # build-time: code that generates other code
 pkg/                # runtime: linked into the consumer's service binary
   config/             # cs-based config loader (YAML/JSON + env)
   gateway/            # gRPC + grpc-gateway and gRPC-only fx listeners
-  service/            # placeholder for future cross-service runtime helpers
+  service/
+    crud/             # runtime half of genlib/grpc/crud: Resource drives Get/List/Create/Update/Patch/Delete
 examples/app/       # end-to-end example of the generator (does not wire pkg/gateway)
   gen/api/main.go       # generator entry point (go:generate target)
   proto/                # generated .proto + buf config + go:generate hook
@@ -153,9 +154,33 @@ mTLS is bound at fx-wiring time via `WithMTLS(MTLSMode)`:
 
 When `ServerConfig.TLS` is true, `ProvideServer` serves HTTPS (HTTP/2 ALPN auto-negotiated); when false it uses h2c (HTTP/2 cleartext) so gRPC still works.
 
-### `pkg/service`
+### `pkg/service/crud`
 
-Currently empty — reserved for future runtime helpers shared across services.
+The runtime half of `genlib/grpc/crud`: the plumbing every generated CRUD
+method repeats, so a handler is one line and only what is particular to the
+resource is hand-written. A `Resource[M, P, K]` (M the stored entity, P the
+API message, K the key) runs Get / List / Create / Update / Patch / Delete
+over a storage-agnostic `Store[M, K]` (Find, List, Create, Update, Delete),
+with hooks for what differs per resource:
+
+- `ResolveName(ctx, name) (ctx, key, err)` / `ResolveParent(ctx, parent) (ctx, err)` — parse the
+  AIP name (a malformed one is the hook's InvalidArgument, never a lookup)
+  and return the context the Store sees, so a parent scope rides on it.
+  `ResolveParent` is nil for a top-level resource.
+- `New`, `Apply(ctx, entity, in, paths, creating)`, `BeforeCreate`, `Touch`, `ToProto`, `BeforeDelete`.
+
+It enforces the same AIP rules the generator emits: NotFound for a missing
+resource; page_size 0 → `Paging.Default`, above `Paging.Max` clamped, below
+zero refused (`Paging.Size`); a Patch needs a non-empty `update_mask` of
+`Writable` fields only (`MaskPaths`), and an Update is a Patch of every
+writable field. `Find` and `Protos` are exposed for custom verbs and for a
+list the consumer pages itself.
+
+It owns no transactions, authorization or error mapping, and passes every
+hook and Store error through untouched — those stay in the consumer's
+interceptor chain. No storage library is imported: a consumer adapts its
+repositories to `Store` once, generically (a datainfra repository is a
+~30-line adapter).
 
 ## Available libraries for codegen
 
